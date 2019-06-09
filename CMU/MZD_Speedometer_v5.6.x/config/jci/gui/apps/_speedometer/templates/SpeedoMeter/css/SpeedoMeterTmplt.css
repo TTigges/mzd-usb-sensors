@@ -1,0 +1,585 @@
+/* start */
+
+#speedometerContainer {
+  font-family: Tipperary, verdana;
+  top: 0px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 416px;
+  width: 800px;
+  position: absolute;
+  overflow: hidden;
+}
+#speedometerContainer #analog {
+  display: none;
+  height: 436px;
+  left: -5px;
+  position: absolute;
+  top: -20px;
+  width: 496px;
+  overflow: hidden;
+}
+#speedometerContainer #speedometerBG {
+  left: 3px;
+  top: 13px;
+  width: 496px;
+  height: 482px;
+  background: url('../images/bg_analog.png') no-repeat scroll center top transparent;
+  position: absolute;
+  z-index: 100;
+}
+#speedometerContainer #speedometerDial {
+  left: 110px;
+  top: 113px;
+  width: 278px;
+  height: 241px;
+  background: url('../images/Ticks_Style04_kmh.png') no-repeat scroll 0 0 transparent;
+  background-size: 100% 93.7%;
+  position: absolute;
+  z-index: 101;
+}
+#speedometerContainer #speedometerDial.mph {
+  background: url('../images/Ticks_Style04_mph.png') no-repeat scroll 0 0 transparent;
+  background-size: 100% 93.7%;
+}
+#speedometerContainer .vehicleSpeed {
+  position: absolute;
+  top: 143px;
+  left: 139px;
+  z-index: 105;
+  width: 220px;
+  height: 220px;
+  color: #FFFFFF;
+  font-size: 45px;
+  line-height: 217px;
+  text-align: center;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+  background: url('../images/currentSpeed.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Blue .vehicleSpeed {
+  background: url('../color/blue/currentSpeed.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Green .vehicleSpeed {
+  background: url('../color/green/currentSpeed.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Purple .vehicleSpeed {
+  background: url('../color/purple/currentSpeed.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Yellow .vehicleSpeed {
+  background: url('../color/yellow/currentSpeed.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Pink .vehicleSpeed {
+  background: url('../color/pink/currentSpeed.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Silver .vehicleSpeed {
+  background: url('../color/silver/currentSpeed.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Orange .vehicleSpeed {
+  background: url('../color/orange/currentSpeed.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer+#digital {
+  display: none;
+  left: 240px;
+  bottom: 200px;
+  position: fixed;
+}
+#speedometerContainer+#digital .pos0 div {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  color: #FFFFFF;
+  font-size: 300px;
+  font-family: "Crystal", Tipperary, verdana;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+}
+#speedometerContainer+#digital .pos0 legend {
+  visibility: hidden;
+}
+#speedometerContainer+#digital .pos0 legend .spunit span {
+  position: fixed;
+  left: 380px;
+  bottom: 40px;
+  z-index: 105;
+  color: #f0f0f0;
+  font-size: 40px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  visibility: visible;
+}
+#speedometerContainer+#digital .pos0 {
+  border-color: transparent;
+}
+#speedometerContainer .topSpeedIndicator {
+  position: absolute;
+  top: 99px;
+  left: 237px;
+  width: 25px;
+  z-index: 102;
+  height: 310px;
+  transform: rotate(-120deg);
+  transition: transform 1.0s ease-out 0s;
+  background: url('../images/TopSpeedNeedle.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer .gpsCompassBG {
+  position: absolute;
+  left: 139px;
+  top: 143px;
+  width: 220px;
+  height: 220px;
+  z-index: 104;
+  transform: rotate(0deg);
+  background: url('../images/compass_bg_divider.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Blue .gpsCompassBG {
+  background: url('../color/blue/compass_bg_divider.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Green .gpsCompassBG {
+  background: url('../color/green/compass_bg_divider.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Purple .gpsCompassBG {
+  background: url('../color/purple/compass_bg_divider.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Yellow .gpsCompassBG {
+  background: url('../color/yellow/compass_bg_divider.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Pink .gpsCompassBG {
+  background: url('../color/pink/compass_bg_divider.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Silver .gpsCompassBG {
+  background: url('../color/silver/compass_bg_divider.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Orange .gpsCompassBG {
+  background: url('../color/orange/compass_bg_divider.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer #gpsCompass {
+  position: relative;
+  top: 21px;
+  left: 21px;
+  width: 179px;
+  height: 179px;
+  z-index: 104;
+}
+#speedometerContainer .speedIndicator {
+  position: absolute;
+  top: 99px;
+  left: 237px;
+  width: 25px;
+  z-index: 105;
+  height: 310px;
+  transform: rotate(-120deg);
+  transition: transform 0.25s linear 0s;
+  background: url('../images/NeedlePointer.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Blue .speedIndicator {
+  background: url('../color/blue/NeedlePointer.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Green .speedIndicator {
+  background: url('../color/green/NeedlePointer.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Purple .speedIndicator {
+  background: url('../color/purple/NeedlePointer.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Yellow .speedIndicator {
+  background: url('../color/yellow/NeedlePointer.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Pink .speedIndicator {
+  background: url('../color/pink/NeedlePointer.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Silver .speedIndicator {
+  background: url('../color/silver/NeedlePointer.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer.Orange .speedIndicator {
+  background: url('../color/orange/NeedlePointer.png') no-repeat scroll center center transparent;
+}
+#speedometerContainer .speedUnit {
+  position: absolute;
+  top: 332px;
+  left: 130px;
+  z-index: 105;
+  color: #808080;
+  font-size: 12px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+#speedometerContainer #valuetable .speedUnit {
+  position: inherit;
+  font-size: 16px;
+  color: inherit;
+}
+#speedometerContainer #gpsCompass * {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  color: #DDDDDD;
+  font-size: 20px;
+  line-height: 20px;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+#speedometerContainer #gpsCompass .small {
+  width: 30px;
+  font-size: 16px;
+  color: #BBBBBB;
+  line-height: 22px;
+}
+#speedometerContainer #gpsCompass .North {
+  top: 0px;
+  left: 78px;
+  color: #FFFFFF;
+  transform: rotate(0deg);
+}
+#speedometerContainer #gpsCompass .NorthEast {
+  top: 24px;
+  left: 128px;
+  transform: rotate(45deg);
+}
+#speedometerContainer #gpsCompass .East {
+  top: 78px;
+  right: 0px;
+  transform: rotate(90deg);
+}
+#speedometerContainer #gpsCompass .SouthEast {
+  bottom: 24px;
+  left: 127px;
+  transform: rotate(135deg);
+}
+#speedometerContainer #gpsCompass .South {
+  bottom: 0px;
+  left: 78px;
+  transform: rotate(180deg);
+}
+#speedometerContainer #gpsCompass .SouthWest {
+  bottom: 24px;
+  left: 20px;
+  transform: rotate(225deg);
+}
+#speedometerContainer #gpsCompass .West {
+  top: 78px;
+  left: 0px;
+  transform: rotate(270deg);
+}
+#speedometerContainer #gpsCompass .NorthWest {
+  top: 24px;
+  left: 20px;
+  transform: rotate(315deg);
+}
+#speedometerContainer #table_bg {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  width: 313px;
+  height: 420px;
+  background: url('../images/bg_table.png') no-repeat scroll 0 0 transparent;
+}
+#speedometerContainer #valuetable {
+  position: absolute;
+  right: 34px;
+  top: 27px;
+  width: 245px;
+}
+#speedometerContainer fieldset {
+  border: 1px solid #444444;
+  border-width: 0px 0px 1px 0px;
+  padding: 2px 0 3px;
+  margin: 0;
+  color: #999999;
+  text-align: right;
+}
+#speedometerContainer fieldset:last-child {
+  border-color: transparent;
+}
+#speedometerContainer fieldset legend {
+  color: #BBBBBB;
+  float: left;
+  font-size: 20px;
+  margin-top: 4px;
+  padding: 0px;
+}
+#speedometerContainer fieldset legend span {
+  font-size: 14px;
+}
+#speedometerContainer fieldset legend span.fuelEffUnit {
+    margin-left: -4px;
+    font-size: 20px;
+}
+#speedometerContainer fieldset div {
+  color: #EEEEEE;
+  margin: 0;
+  font-size: 24px;
+}
+#speedometerContainer #gpsAltitudeFieldSet {
+  /*border-color: transparent;
+  padding-bottom: 0px;*/
+}
+#speedometerContainer #gpsLatitudeFieldSet div.lat_n {
+  padding-right: 17px;
+  background: url('../images/Lat_N.png') no-repeat scroll right center transparent;
+}
+#speedometerContainer #gpsLatitudeFieldSet div.lat_s {
+  padding-right: 17px;
+  background: url('../images/Lat_S.png') no-repeat scroll right center transparent;
+}
+#speedometerContainer #gpsLongitudeFieldSet div.lon_w {
+  padding-right: 17px;
+  background: url('../images/Lon_W.png') no-repeat scroll right center transparent;
+}
+#speedometerContainer #gpsLongitudeFieldSet div.lon_e {
+  padding-right: 17px;
+  background: url('../images/Lon_E.png') no-repeat scroll right center transparent;
+}
+/* German begin */
+
+#speedometerContainer #gpsLongitudeFieldSet div.lon_e.de {
+  padding-right: 17px;
+  background: url('../images/Lon_O.png') no-repeat scroll right center transparent;
+}
+/* German end */
+
+/* French begin */
+
+#speedometerContainer #gpsLongitudeFieldSet div.lon_w.fr {
+  padding-right: 17px;
+  background: url('../images/Lon_O.png') no-repeat scroll right center transparent;
+}
+/* French end */
+
+/* Turkish begin */
+
+#speedometerContainer #gpsLatitudeFieldSet div.lat_n.tr {
+  padding-right: 17px;
+  background: url('../images/Lat_N_K.png') no-repeat scroll right center transparent;
+}
+#speedometerContainer #gpsLatitudeFieldSet div.lat_s.tr {
+  padding-right: 17px;
+  background: url('../images/Lat_S_G.png') no-repeat scroll right center transparent;
+}
+#speedometerContainer #gpsLongitudeFieldSet div.lon_w.tr {
+  padding-right: 17px;
+  background: url('../images/Lon_W_B.png') no-repeat scroll right center transparent;
+}
+#speedometerContainer #gpsLongitudeFieldSet div.lon_e.tr {
+  padding-right: 17px;
+  background: url('../images/Lon_E_D.png') no-repeat scroll right center transparent;
+}
+/* Turkish end */
+
+#speedometerContainer fieldset div span {
+  color: #BBBBBB;
+  font-size: 16px;
+  padding-right: 4px;
+}
+#speedometerContainer [id^=textSpeed] {
+  position: absolute;
+  z-index: 101;
+  color: #CCCCCC;
+  font-size: 25px;
+  text-align: center;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+#speedometerContainer #textSpeed0 {
+  color: #666666;
+  left: 108px;
+  top: 320px;
+}
+#speedometerContainer #textSpeed20 {
+  left: 73px;
+  top: 265px;
+}
+#speedometerContainer #textSpeed40 {
+  left: 73px;
+  top: 209px;
+}
+#speedometerContainer #textSpeed60 {
+  left: 91px;
+  top: 158px;
+}
+#speedometerContainer #textSpeed80 {
+  left: 126px;
+  top: 114px;
+}
+#speedometerContainer #textSpeed100 {
+  left: 165px;
+  top: 84px;
+}
+#speedometerContainer #textSpeed100.mph {
+  left: 176px;
+  top: 88px;
+}
+#speedometerContainer #textSpeed120 {
+  left: 226px;
+  top: 74px;
+}
+#speedometerContainer #textSpeed120.mph {
+  left: 233px;
+  top: 79px;
+}
+#speedometerContainer #textSpeed140 {
+  left: 286px;
+  top: 84px;
+}
+#speedometerContainer #textSpeed140.mph {
+  left: 288px;
+  top: 88px;
+}
+#speedometerContainer #textSpeed160 {
+  left: 341px;
+  top: 114px;
+}
+#speedometerContainer #textSpeed180 {
+  left: 376px;
+  top: 158px;
+}
+#speedometerContainer #textSpeed200 {
+  left: 393px;
+  top: 209px;
+}
+#speedometerContainer #textSpeed220 {
+  left: 393px;
+  top: 265px;
+}
+#speedometerContainer #textSpeed240 {
+  left: 375px;
+  top: 320px;
+}
+#speedometerContainer #rpmDial {
+  background: url("../images/engine_speed.png") no-repeat scroll 0 0 transparent;
+  height: 40px;
+  left: 111px;
+  position: absolute;
+  top: 353px;
+  width: 278px;
+  z-index: 101;
+}
+#speedometerContainer .RPMIndicator, #speedometerContainer .topRPMIndicator {
+  width: 25px;
+  height: 310px;
+  background: url('../images/RPMNeedle.png') no-repeat scroll center center transparent;
+  left: 237px;
+  position: absolute;
+  top: 99px;
+  z-index: 103;
+  transform: rotate(-145deg);
+  transition: transform 0.2s linear 0s;
+}
+#speedometerContainer .topRPMIndicator {
+  z-index: 102;
+  background: url('../images/TopRPMNeedle.png') no-repeat scroll center center transparent;
+  transition: transform 1.0s ease-out 0s;
+}
+#speedometerContainer #rpmDial .step {
+  color: #cccccc;
+  font-size: 20px;
+  left: 47px;
+  position: absolute;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  top: 13px;
+}
+#speedometerContainer #rpmDial .step.s0 {
+  color: #666666;
+}
+#speedometerContainer #rpmDial .step.s1 {
+  left: 68px;
+  top: 25px;
+}
+#speedometerContainer #rpmDial .step.s2 {
+  left: 93px;
+  top: 35px;
+}
+#speedometerContainer #rpmDial .step.s3 {
+  left: 120px;
+  top: 40px;
+}
+#speedometerContainer #rpmDial .step.s4 {
+  left: 147px;
+  top: 40px;
+}
+#speedometerContainer #rpmDial .step.s5 {
+  left: 172px;
+  top: 35px;
+}
+#speedometerContainer #rpmDial .step.s6 {
+  left: 198px;
+  top: 25px;
+}
+#speedometerContainer #rpmDial .step.s7 {
+  left: 220px;
+  top: 15px;
+}
+#speedometerContainer #rpmDial .unit, #speedometerContainer #rpmDial .scale {
+  color: #808080;
+  font-size: 12px;
+  left: 47px;
+  position: absolute;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  top: 54px;
+}
+#speedometerContainer #rpmDial .scale {
+  left: 197px;
+}
+/* For Resize Mods */
+
+#speedometerContainer .alt1 fieldset {
+  height: 37px;
+}
+#speedometerContainer .alt1 fieldset div {
+  font-weight: 700;
+  font-size: 30px;
+  white-space: nowrap;
+}
+#speedometerContainer .alt1 fieldset legend span {
+  font-size: 16x;
+}
+#speedometerContainer .alt1 fieldset legend span.fuelEffUnit {
+  font-size: 20px;
+  margin-left: -6px;
+  font-weight: normal;
+}
+#speedometerContainer .alt1 fieldset#Drv1AvlFuelEFieldSet .spunit span, #speedometerContainer .alt1 fieldset legend,
+#speedometerContainer .alt1 fieldset div.gpsAltitudeMinMax {
+  font-size: 25px;
+}
+#speedometerContainer.Red+#digital .pos0 legend .spunit span, #speedometerContainer.Red+#digital .pos0 div {
+  color: Red;
+}
+#speedometerContainer.Orange+#digital .pos0 legend .spunit span, #speedometerContainer.Orange+#digital .pos0 div {
+  color: Orange;
+}
+#speedometerContainer.Purple+#digital .pos0 legend .spunit span, #speedometerContainer.Purple+#digital .pos0 div {
+  color: Purple;
+}
+#speedometerContainer.Silver+#digital .pos0 legend .spunit span, #speedometerContainer.Silver+#digital .pos0 div {
+  color: White;
+}
+#speedometerContainer.Pink+#digital .pos0 legend .spunit span, #speedometerContainer.Pink+#digital .pos0 div {
+  color: HotPink;
+}
+#speedometerContainer.Blue+#digital .pos0 legend .spunit span, #speedometerContainer.Blue+#digital .pos0 div {
+  color: DodgerBlue;
+}
+#speedometerContainer.Green+#digital .pos0 legend .spunit span, #speedometerContainer.Green+#digital .pos0 div {
+  color: ForestGreen;
+}
+#speedometerContainer.Yellow+#digital .pos0 legend .spunit span, #speedometerContainer.Yellow+#digital .pos0 div {
+  color: Yellow;
+}
+#speedo-fuel-bar-wrapper {
+  position: fixed;
+  width: 320px;
+  top: 410px;
+  left: 30px;
+  height: 30px;
+}
+#speedo-fuel-bar-container {
+  padding: 4px;
+}
+#speedo-fuel-bar {
+  height: 30px;
+}
+#speedometerContainer fieldset .hideFuel {
+  display: none;
+}
+#speedometerContainer fieldset#Drv1AvlFuelEFieldSet .spunit {
+  visibility: hidden;
+}
+#speedometerContainer fieldset#Drv1AvlFuelEFieldSet .spunit span {
+  visibility: visible;
+}

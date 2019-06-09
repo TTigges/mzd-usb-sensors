@@ -1,0 +1,20 @@
+The following files contain additions to show oil sensor and TPMS data:
+
+config/jci/gui/apps/_speedometer/sh/speedometer.sh
+// l. 48 - 60
+// l 61 with additional values
+
+config/jci/gui/apps/_speedometer/js/speedometer.js
+// receiving the values
+// tbd: only two functions for all TPMS temps and pressure data
+// function tpmsTemps (callBackClass, value)
+// function tpmsPress (callBackClass, value)
+
+
+config/jci/gui/apps/_speedometer/templates/SpeedBar/js/SpeedBacTpmlt.js
+// new Fieldsets l. 133 - 182
+
+config/jci/gui/apps/_speedometer/js/speedometerUpdate.js
+// new translations
+
+speedometer-config.js
