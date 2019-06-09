@@ -394,6 +394,7 @@ function updateSpeedoApp() {
     $('#AvgFuelFieldSet legend').html('Avg. <span class="fuelEffUnit"></span>');
     $('#batSOCFieldSet legend').html('Battery SOC'); //Battery State of Charge
     $('#engLoadFieldSet legend').html('Engine Load');
+    $('#boostFieldSet legend').html('Ladedruck <span class="spunit">(<span class="pressUnit">bar</span>)');
     $('#oilTempFieldSet legend').html('Öltemp. <span class="spunit">(&deg;<span class="tempUnit">C</span>)</span>');
     $('#oilPressFieldSet legend').html('Öldruck <span class="spunit">(<span class="pressUnit">bar</span>)');
     $('#tpmsFlTempFieldSet legend').html('RDKS VL <span class="spunit">(&deg;<span class="tempUnit">C</span>)</span>');

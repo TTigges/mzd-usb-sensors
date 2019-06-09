@@ -130,6 +130,11 @@ function SpeedBarTmplt(uiaId, parentDiv, templateID, controlProperties) {
     '       <legend class="vehDataLegends">Trip Dist. <span class="spunit">(<span class="distUnit">km</span>)<span></legend>' +
     '       <div class="tripDistance">0.00</div>' +
     '     </fieldset>' +
+    '     <fieldset id="boostFieldSet" class="' +
+    ((spdTbl.boost[0] === 0) ? "vehDataMain" : "vehDataBar" + spdTbl.boost[1]) + " pos" + spdTbl.boost[2] + '">' +
+    '       <legend class="vehDataLegends">Boost <span class="spunit">(<span class="pressUnit">bar</span>)</span></legend>' +
+    '       <div class="boostValue">0.00</div>' +
+    '     </fieldset>' +
     '     <fieldset id="oilTempFieldSet" class="' +
     ((spdTbl.oilTemp[0] === 0) ? "vehDataMain" : "vehDataBar" + spdTbl.oilTemp[1]) + " pos" + spdTbl.oilTemp[2] + '">' +
     '       <legend class="vehDataLegends">Oil Temp <span class="spunit">(&deg;<span class="tempUnit">C</span>)</span></legend>' +

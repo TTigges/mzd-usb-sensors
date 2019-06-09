@@ -23,7 +23,8 @@ then
       SPEED=`smdb-read -n vdm_vdt_current_data -e VehicleSpeed`
       ENGLOAD=`smdb-read -n vdm_vdt_current_data -e EngineLoad`
       LPOS=`smdb-read -n vdm_vdt_current_data -e TransmChangeLeverPosition`
-      echo "vehicleData#${SPEED}#${RPM}#${DIST}#${GPSSPEED}#${ALTITUDE}#${HEADING}#${LATITUDE}#${LONGITUDE}#${ENGLOAD}#${LPOS}"
+      BOOST=`smdb-read -n vdm_vdt_current_data -e Boost`
+      echo "vehicleData#${SPEED}#${RPM}#${DIST}#${GPSSPEED}#${ALTITUDE}#${HEADING}#${LATITUDE}#${LONGITUDE}#${ENGLOAD}#${LPOS}#${BOOST}"
       sleep 0.5
     done
 fi

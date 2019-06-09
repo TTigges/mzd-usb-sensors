@@ -30,6 +30,7 @@ var outsideTemp = 0;
 var intakeTemp = 0;
 var coolantTemp = 0;
 // new:
+var boost = 0;
 var oilTemp = 0;
 var oilPres = 0;
 // TPMS
@@ -95,6 +96,7 @@ $(document).ready(function() {
           updateGPSLongitude(res[8]);
           updateEngineLoad(res[9]);
           updateGearLeverPos(res[10]);
+          updateBoost(res[11]);
           break;
         case 'envData':
           updateFuelEfficiency(res[1]);
@@ -669,6 +671,13 @@ $(document).ready(function() {
         }
       }
     }
+  }
+  // --------------------------------------------------------------------------
+  // Update Boost
+  // --------------------------------------------------------------------------
+  function updateBoost(boostVal) {
+    boost = boostVal;
+    $('.boostValue').html(boost);
   }
   // --------------------------------------------------------------------------
   // Update Oil Temperature
