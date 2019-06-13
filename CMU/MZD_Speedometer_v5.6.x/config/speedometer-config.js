@@ -21,7 +21,6 @@ var spdTbl = {
   avgSpeed:   [2, 1, 2], //Average Speed
   gpsSpeed:   [0, 1, 1], //GPS Speed
   engSpeed:   [0, 1, 2], //Engine Speed
-  boost:      [0, 1, 3], //Boost
   outTemp:    [1, 1, 1], //Outside Temperature
   inTemp:     [1, 1, 2], //Intake Temperature
   coolTemp:   [1, 1, 2], //Coolant Temperature

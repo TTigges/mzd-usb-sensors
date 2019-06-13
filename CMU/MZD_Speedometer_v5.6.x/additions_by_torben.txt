@@ -11,7 +11,7 @@ config/jci/gui/apps/_speedometer/js/speedometer.js
 // function tpmsPress (callBackClass, value)
 
 
-config/jci/gui/apps/_speedometer/templates/SpeedBar/js/SpeedBacTpmlt.js
+config/jci/gui/apps/_speedometer/templates/SpeedBar/js/SpeedBarTpmlt.js
 // new Fieldsets l. 133 - 182
 
 config/jci/gui/apps/_speedometer/js/speedometerUpdate.js

@@ -23,8 +23,8 @@ then
       SPEED=`smdb-read -n vdm_vdt_current_data -e VehicleSpeed`
       ENGLOAD=`smdb-read -n vdm_vdt_current_data -e EngineLoad`
       LPOS=`smdb-read -n vdm_vdt_current_data -e TransmChangeLeverPosition`
-      BOOST=`smdb-read -n vdm_vdt_current_data -e Boost`
-      echo "vehicleData#${SPEED}#${RPM}#${DIST}#${GPSSPEED}#${ALTITUDE}#${HEADING}#${LATITUDE}#${LONGITUDE}#${ENGLOAD}#${LPOS}#${BOOST}"
+     # BOOST=`smdb-read -n vdm_vdt_current_data -e Boost`
+      echo "vehicleData#${SPEED}#${RPM}#${DIST}#${GPSSPEED}#${ALTITUDE}#${HEADING}#${LATITUDE}#${LONGITUDE}#${ENGLOAD}#${LPOS}"
       sleep 0.5
     done
 fi
@@ -46,7 +46,7 @@ then
     BATSOC=`smdb-read -n vdm_vdt_current_data -e Battery_StateOfCharge`
    # BATSOC=`smdb-read -n vdm_vdt_current_data -e BattTracSoc_Pc_Actl`
     GPOS=`smdb-read -n vdm_vdt_current_data -e TransmissionGearPosition`
-   # call the exec
+    /tmp/mnt/data_persist/dev/bin/usb_rbduo_get
    # "oiltemp: xx oilpress: yy"
     OILTEMP=`cat /tmp/mnt/data_persist/dev/bin/oil.out | awk '{print $2}'`
     OILPRES=`cat /tmp/mnt/data_persist/dev/bin/oil.out | awk '{print $4}'`

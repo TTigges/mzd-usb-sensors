@@ -30,7 +30,7 @@ var outsideTemp = 0;
 var intakeTemp = 0;
 var coolantTemp = 0;
 // new:
-var boost = 0;
+// var boost = 0;
 var oilTemp = 0;
 var oilPres = 0;
 // TPMS
@@ -96,7 +96,6 @@ $(document).ready(function() {
           updateGPSLongitude(res[8]);
           updateEngineLoad(res[9]);
           updateGearLeverPos(res[10]);
-          updateBoost(res[11]);
           break;
         case 'envData':
           updateFuelEfficiency(res[1]);
@@ -675,10 +674,10 @@ $(document).ready(function() {
   // --------------------------------------------------------------------------
   // Update Boost
   // --------------------------------------------------------------------------
-  function updateBoost(boostVal) {
+  /*function updateBoost(boostVal) {
     boost = boostVal;
     $('.boostValue').html(boost);
-  }
+  }*/
   // --------------------------------------------------------------------------
   // Update Oil Temperature
   // --------------------------------------------------------------------------
@@ -696,6 +695,7 @@ $(document).ready(function() {
       oilTemp = "---";
     }
     */
+    oilTemp += "&deg;";
     oilTemp = tempVal;
     $('.oilTempValue').html(oilTemp);
   }
@@ -740,6 +740,7 @@ $(document).ready(function() {
       tpmsFlTemp = "---";
     }
     */
+    tpmsFlTemp += "&deg;";
     tpmsFlTemp = tpmsFlTempVal;
     $('.tpmsFlTempValue').html(tpmsFlTemp);
   }
@@ -779,6 +780,7 @@ $(document).ready(function() {
       tpmsFrTemp = "---";
     }
     */
+    tpmsFrTemp += "&deg;";
     tpmsFrTemp = tpmsFrTempVal;
     $('.tpmsFrTempValue').html(tpmsFrTemp);
   }
@@ -818,6 +820,7 @@ $(document).ready(function() {
       tpmsRlTemp = "---";
     }
     */
+    tpmsRlTemp += "&deg;";
     tpmsRlTemp = tpmsRlTempVal;
     $('.tpmsRlTempValue').html(tpmsRlTemp);
   }
@@ -857,6 +860,7 @@ $(document).ready(function() {
       tpmsRrTemp = "---";
     }
     */
+    tpmsRrTemp += "&deg;";
     tpmsRrTemp = tpmsRrTempVal;
     $('.tpmsRrTempValue').html(tpmsRrTemp);
   }
