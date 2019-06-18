@@ -29,11 +29,8 @@ var engineSpeedTop = 0;
 var outsideTemp = 0;
 var intakeTemp = 0;
 var coolantTemp = 0;
-// new:
-// var boost = 0;
 var oilTemp = 0;
 var oilPres = 0;
-// TPMS
 var tpmsFlTemp = 0;
 var tpmsFlPres = 0;
 var tpmsFrTemp = 0;
@@ -42,7 +39,6 @@ var tpmsRlTemp = 0;
 var tpmsRlPres = 0;
 var tpmsRrTemp = 0;
 var tpmsRrPres = 0;
-// end of new //
 var gearPos = "---";
 var lastGPSspeedValue = 0;
 var lastEnginespeedValue = 0;
@@ -672,49 +668,16 @@ $(document).ready(function() {
     }
   }
   // --------------------------------------------------------------------------
-  // Update Boost
-  // --------------------------------------------------------------------------
-  /*function updateBoost(boostVal) {
-    boost = boostVal;
-    $('.boostValue').html(boost);
-  }*/
-  // --------------------------------------------------------------------------
   // Update Oil Temperature
   // --------------------------------------------------------------------------
   function updateOilTemp(tempVal) {
-    /*
-    tempVal = $.trim(tempVal);
-    if ($.isNumeric(tempVal) && tempVal !== "0") {
-      oilTemp = tempVal;
-      if (tempIsF) {
-        tempVal = tempVal * 1.8 + 32;
-        oilTemp = parseFloat(tempVal.toFixed(1));
-      }
-      oilTemp += "&deg;";
-    } else {
-      oilTemp = "---";
-    }
-    */
-    oilTemp += "&deg;";
-    oilTemp = tempVal;
+    oilTemp = tempVal + "&deg;";
     $('.oilTempValue').html(oilTemp);
   }
   // --------------------------------------------------------------------------
   // Update Oil Pressure
   // --------------------------------------------------------------------------
   function updateOilPres(presVal) {
-    /*
-    pressVal = $.trim(pressVal);
-    if ($.isNumeric(presVal) && presVal !== "0") {
-      oilPres = presVal;
-      if (pressIsPsi) {
-        presVal = presVal * 0.069;
-        oilPres = parseFloat(presVal.toFixed(0));
-      }
-    } else {
-      oilPres = "---";
-    }
-    */
    oilPres = presVal;
     $('.oilPresValue').html(oilPres);
   }
@@ -727,39 +690,13 @@ $(document).ready(function() {
   // Update Front Left Temperature
   // --------------------------------------------------------------------------
   function updateTpmsFlTemp(tpmsFlTempVal) {
-    /*
-    tpmsFlTempVal = $.trim(tpmsFlTempVal);
-    if ($.isNumeric(tpmsFlTempVal) && tpmsFlTempVal !== "0") {
-      tpmsFlTemp = tpmsFlTempVal;
-      if (tempIsF) {
-        tpmsFlTempVal = tpmsFlTempVal * 1.8 + 32;
-        tpmsFlTemp = parseFloat(tpmsFlTempVal.toFixed(1));
-      }
-      tpmsFlTemp += "&deg;";
-    } else {
-      tpmsFlTemp = "---";
-    }
-    */
-    tpmsFlTemp += "&deg;";
-    tpmsFlTemp = tpmsFlTempVal;
+    tpmsFlTemp = tpmsFlTempVal + "&deg;";
     $('.tpmsFlTempValue').html(tpmsFlTemp);
   }
   // --------------------------------------------------------------------------
   // Update Front Left Pressure
   // --------------------------------------------------------------------------
   function updateTpmsFlPres(tpmsFlPressVal) {
-    /*
-    tpmsFlPressVal = $.trim(tpmsFlPressVal);
-    if ($.isNumeric(tpmsFlPressVal) && tpmsFlPressVal !== "0") {
-      tpmsFlPres = tpmsFlPressVal;
-      if (pressIsPsi) {
-        tpmsFlPressVal = tpmsFlPressVal * 0.069;
-        tpmsFlPres = parseFloat(tpmsFlPressVal.toFixed(0));
-      }
-    } else {
-      tpmsFlPres = "---";
-    }
-    */
     tpmsFlPres = tpmsFlPressVal;
     $('.tpmsFlPresValue').html(tpmsFlPres);
   }
@@ -767,39 +704,13 @@ $(document).ready(function() {
   // Update Front Right Temperature
   // --------------------------------------------------------------------------
   function updateTpmsFrTemp(tpmsFrTempVal) {
-    /*
-    tpmsFrTempVal = $.trim(tpmsFrTempVal);
-    if ($.isNumeric(tpmsFrTempVal) && tpmsFrTempVal !== "0") {
-      tpmsFrTemp = tpmsFrTempVal;
-      if (tempIsF) {
-        tpmsFrTempVal = tpmsFrTempVal * 1.8 + 32;
-        tpmsFrTemp = parseFroat(tpmsFrTempVal.toFixed(1));
-      }
-      tpmsFrTemp += "&deg;";
-    } else {
-      tpmsFrTemp = "---";
-    }
-    */
-    tpmsFrTemp += "&deg;";
-    tpmsFrTemp = tpmsFrTempVal;
+    tpmsFrTemp = tpmsFrTempVal + "&deg;";
     $('.tpmsFrTempValue').html(tpmsFrTemp);
   }
   // --------------------------------------------------------------------------
   // Update Front Right Pressure
   // --------------------------------------------------------------------------
   function updateTpmsFrPres(tpmsFrPressVal) {
-    /*
-    tpmsFrPressVal = $.trim(tpmsFrPressVal);
-    if ($.isNumeric(tpmsFrPressVal) && tpmsFrPressVal !== "0") {
-      tpmsFrPres = tpmsFrPressVal;
-      if (pressIsPsi) {
-        tpmsFrPressVal = tpmsFrPressVal * 0.069;
-        tpmsFrPres = parseFroat(tpmsFrPressVal.toFixed(0));
-      }
-    } else {
-      tpmsFrPres = "---";
-    }
-    */
     tpmsFrPres = tpmsFrPressVal;
     $('.tpmsFrPresValue').html(tpmsFrPres);
   }
@@ -807,39 +718,13 @@ $(document).ready(function() {
   // Update Rear Left Temperature
   // --------------------------------------------------------------------------
   function updateTpmsRlTemp(tpmsRlTempVal) {
-    /*
-    tpmsRlTempVal = $.trim(tpmsRlTempVal);
-    if ($.isNumeric(tpmsRlTempVal) && tpmsRlTempVal !== "0") {
-      tpmsRlTemp = tpmsRlTempVal;
-      if (tempIsF) {
-        tpmsRlTempVal = tpmsRlTempVal * 1.8 + 32;
-        tpmsRlTemp = parseRloat(tpmsRlTempVal.toFixed(1));
-      }
-      tpmsRlTemp += "&deg;";
-    } else {
-      tpmsRlTemp = "---";
-    }
-    */
-    tpmsRlTemp += "&deg;";
-    tpmsRlTemp = tpmsRlTempVal;
+    tpmsRlTemp = tpmsRlTempVal + "&deg;";
     $('.tpmsRlTempValue').html(tpmsRlTemp);
   }
   // --------------------------------------------------------------------------
   // Update Rear Left Pressure
   // --------------------------------------------------------------------------
   function updateTpmsRlPres(tpmsRlPressVal) {
-    /*
-    tpmsRlPressVal = $.trim(tpmsRlPressVal);
-    if ($.isNumeric(tpmsRlPressVal) && tpmsRlPressVal !== "0") {
-      tpmsRlPres = tpmsRlPressVal;
-      if (pressIsPsi) {
-        tpmsRlPressVal = tpmsRlPressVal * 0.069;
-        tpmsRlPres = parseRloat(tpmsRlPressVal.toFixed(0));
-      }
-    } else {
-      tpmsRlPres = "---";
-    }
-    */
     tpmsRlPres = tpmsRlPressVal;
     $('.tpmsRlPresValue').html(tpmsRlPres);
   }
@@ -847,39 +732,13 @@ $(document).ready(function() {
   // Update Rear Right Temperature
   // --------------------------------------------------------------------------
   function updateTpmsRrTemp(tpmsRrTempVal) {
-    /*
-    tpmsRrTempVal = $.trim(tpmsRrTempVal);
-    if ($.isNumeric(tpmsRrTempVal) && tpmsRrTempVal !== "0") {
-      tpmsRrTemp = tpmsRrTempVal;
-      if (tempIsF) {
-        tpmsRrTempVal = tpmsRrTempVal * 1.8 + 32;
-        tpmsRrTemp = parseRroat(tpmsRrTempVal.toFixed(1));
-      }
-      tpmsRrTemp += "&deg;";
-    } else {
-      tpmsRrTemp = "---";
-    }
-    */
-    tpmsRrTemp += "&deg;";
-    tpmsRrTemp = tpmsRrTempVal;
+    tpmsRrTemp = tpmsRrTempVal + "&deg;";
     $('.tpmsRrTempValue').html(tpmsRrTemp);
   }
   // --------------------------------------------------------------------------
   // Update Rear Right Pressure
   // --------------------------------------------------------------------------
   function updateTpmsRrPres(tpmsRrPressVal) {
-    /*
-    tpmsRrPressVal = $.trim(tpmsRrPressVal);
-    if ($.isNumeric(tpmsRrPressVal) && tpmsRrPressVal !== "0") {
-      tpmsRrPres = tpmsRrPressVal;
-      if (pressIsPsi) {
-        tpmsRrPressVal = tpmsRrPressVal * 0.069;
-        tpmsRrPres = parseRroat(tpmsRrPressVal.toFixed(0));
-      }
-    } else {
-      tpmsRrPres = "---";
-    }
-    */
     tpmsRrPres = tpmsRrPressVal;
     $('.tpmsRrPresValue').html(tpmsRrPres);
   }

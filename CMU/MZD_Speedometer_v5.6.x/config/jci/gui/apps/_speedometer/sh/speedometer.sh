@@ -23,7 +23,6 @@ then
       SPEED=`smdb-read -n vdm_vdt_current_data -e VehicleSpeed`
       ENGLOAD=`smdb-read -n vdm_vdt_current_data -e EngineLoad`
       LPOS=`smdb-read -n vdm_vdt_current_data -e TransmChangeLeverPosition`
-     # BOOST=`smdb-read -n vdm_vdt_current_data -e Boost`
       echo "vehicleData#${SPEED}#${RPM}#${DIST}#${GPSSPEED}#${ALTITUDE}#${HEADING}#${LATITUDE}#${LONGITUDE}#${ENGLOAD}#${LPOS}"
       sleep 0.5
     done
@@ -69,36 +68,36 @@ fi
 ## ================================================================================================
 if [ "${action}" == "vehicleSpeed" ]
 then
-    while true
-    do
-        SPEED=`smdb-read -n vdm_vdt_current_data -e VehicleSpeed`
-        echo "vehicleSpeed#${SPEED}"
-        sleep 0.5
-    done
+  while true
+  do
+    SPEED=`smdb-read -n vdm_vdt_current_data -e VehicleSpeed`
+    echo "vehicleSpeed#${SPEED}"
+    sleep 0.5
+  done
 fi
 
 ## Fuel Efficiency
 ## ================================================================================================
 if [ "${action}" == "fuelEfficiency" ]
 then
-    while true
-    do
-        FUELEFF=`smdb-read -n vdm -e Drv1AvlFuelE`
-        echo "fuelEfficiency#${FUELEFF}"
-        sleep 3.0
-    done
+  while true
+  do
+    FUELEFF=`smdb-read -n vdm -e Drv1AvlFuelE`
+    echo "fuelEfficiency#${FUELEFF}"
+    sleep 3.0
+  done
 fi
 
 ## Total Fuel Efficiency
 ## ================================================================================================
 if [ "${action}" == "totfuelEfficiency" ]
 then
-    while true
-    do
-        TOTFUELEFF=`smdb-read -n vdm_vdt_history_data -e TotAvlFuelE`
-        echo "totfuelEff#${TOTFUELEFF}"
-        sleep 3.0
-    done
+  while true
+  do
+    TOTFUELEFF=`smdb-read -n vdm_vdt_history_data -e TotAvlFuelE`
+    echo "totfuelEff#${TOTFUELEFF}"
+    sleep 3.0
+  done
 fi
 
 ## Drive Distance
