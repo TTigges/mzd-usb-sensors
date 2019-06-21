@@ -25,6 +25,17 @@ const char MORE_DATA = '+';
 const char END_OF_TRANSMISSION = '.';
 const char NACK_OR_ERROR = '/';
 
+/* BLE scan parameters */
+#define BLE_SCAN_TYPE        0x00   // Passive scanning
+#define BLE_SCAN_INTERVAL    0x0060 // 60 ms
+#define BLE_SCAN_WINDOW      0x0030 // 30 ms
+
+/* Only accept these addresses */
+char SMAC1[16] = "80EACA100326"; // Front left
+char SMAC2[16] = "81EACA2002C0"; // Front right
+char SMAC3[16] = "82EACA300633"; // Rear left
+char SMAC4[16] = "83EACA400619"; // Rear right
+
 /* List of supported functions */
 const int FUNCTION_COUNT = 2;
 const String FUNCTION_LIST[] = {"TPMS", "OIL"};
@@ -72,6 +83,19 @@ void setup() {
   blinkLed( 500);
 
   Serial.begin( 115200);
+  
+  delay(5000);
+  Serial.println("BLE scan demo.");
+  
+  ble.init();
+  ble.onScanReportCallback(reportCallback);
+
+  // Set scan parameters.
+  ble.setScanParams(BLE_SCAN_TYPE, BLE_SCAN_INTERVAL, BLE_SCAN_WINDOW);
+  
+  ble.startScanning();
+  Serial.println("BLE scan start.");
+ 
 }
 
 void loop() {
@@ -194,7 +218,6 @@ void queryFunction()
 {
   switch( mapToFunction( currentFunction)) {
     case TPMS:
-      getTpms();
       sendTpms();
       sendEOT();
       break;
@@ -276,32 +299,99 @@ void blinkLed( int time_ms) {
   delay(time_ms);
 }
 
-/********************** TPMS PRESSURE AND TEMPERATURE *************************/
+/********************** BLE TPMS PRESSURE AND TEMPERATURE *************************/
 
-void getTpms()
-{
-  if( simulate)
-  {
-    /* TESTING ONLY, GENERATE RANDOM TIRE PRESSURE BETWEEN 1.8 AND 2.2 
-     * Pressure: Two digits right of the dot.
-     * Temperature: One digit right of the dot.
-     */
-    tpmsPress[FRONT_RIGHT] = (180 + random(40)) / 100.0;
-    tpmsPress[FRONT_LEFT] = (180 + random(40)) / 100.0;
-    tpmsPress[REAR_RIGHT] = (180 + random(40)) / 100.0;
-    tpmsPress[REAR_LEFT] = (180 + random(40)) / 100.0;
+uint32_t hex2int(char *hex) {
+    uint32_t val = 0;
+    while (*hex) {
+        // get current character then increment
+        char byte = *hex++; 
+        // transform hex character to the 4bit equivalent number, using the ascii table indexes
+        if (byte >= '0' && byte <= '9') byte = byte - '0';
+        else if (byte >= 'a' && byte <='f') byte = byte - 'a' + 10;
+        else if (byte >= 'A' && byte <='F') byte = byte - 'A' + 10;    
+        // shift 4 to make space for new digit, and add the 4 bits of the new digit 
+        val = (val << 4) | (byte & 0xF);
+    }
+    return val;
+}
 
-    tpmsTemp[FRONT_RIGHT] = (-100 + random(900)) / 10.0;
-    tpmsTemp[FRONT_LEFT] = (-100 + random(900)) / 10.0;
-    tpmsTemp[REAR_RIGHT] = (-100 + random(900)) / 10.0;
-    tpmsTemp[REAR_LEFT] = (-100 + random(900)) / 10.0;
+void reportCallback(advertisementReport_t *report) {
+  
+  char addr[16];
+  sprintf(addr, "%02X%02X%02X%02X%02X%02X", (unsigned char)report->advData[11], (unsigned char)report->advData[12], (unsigned char)report->advData[13], (unsigned char)report->advData[14], (unsigned char)report->advData[15], (unsigned char)report->advData[16]);
+  Serial.print("Addr.: ");Serial.println(addr);
+  Serial.println(" ");
+  char pres[10];
+  char temp[10];
+  if (strcmp (SMAC1, addr) == 0) {
+    Serial.print("Sensor ");Serial.print("FRONT_LEFT");Serial.print(": ");Serial.println(addr);
+    
+    sprintf(pres, "%02X%02X%02X%02X", (unsigned char)report->advData[20], (unsigned char)report->advData[19], (unsigned char)report->advData[18], (unsigned char)report->advData[17]);
+    uint32_t y = hex2int(pres);
+    float pressure = y/100000.00;
+    //Serial.print("Pres: ");Serial.print(pressure);Serial.println(" bar");
+    tpmsPress[0] = pressure;
+
+    sprintf(temp, "%02X%02X%02X%02X", (unsigned char)report->advData[24], (unsigned char)report->advData[23], (unsigned char)report->advData[22], (unsigned char)report->advData[21]);
+    uint32_t x = hex2int(temp);
+    float tmpr = x/100.00;
+    //Serial.print("Temp: ");Serial.print(tmpr);Serial.println("°C");
+    tpmsTemp[0] = tmpr;
+
+    Serial.println(" ");
   }
-  else 
-  {
-    /* @TODO: Real implementation goes here */
+  else if (strcmp (SMAC2, addr) == 0) {
+    Serial.print("Sensor ");Serial.print("FRONT_RIGHT");Serial.print(": ");Serial.println(addr);
+    
+    sprintf(pres, "%02X%02X%02X%02X", (unsigned char)report->advData[20], (unsigned char)report->advData[19], (unsigned char)report->advData[18], (unsigned char)report->advData[17]);
+    uint32_t y = hex2int(pres);
+    float pressure = y/100000.00;
+    //Serial.print("Pres: ");Serial.print(pressure);Serial.println(" bar");
+    tpmsPress[1] = pressure;
 
+    sprintf(temp, "%02X%02X%02X%02X", (unsigned char)report->advData[24], (unsigned char)report->advData[23], (unsigned char)report->advData[22], (unsigned char)report->advData[21]);
+    uint32_t x = hex2int(temp);
+    float tmpr = x/100.00;
+    //Serial.print("Temp: ");Serial.print(tmpr);Serial.println("°C");
+    tpmsTemp[1] = tmpr;
 
-  }    
+    Serial.println(" ");
+  }
+  else if (strcmp (SMAC3, addr) == 0) {
+    Serial.print("Sensor ");Serial.print("REAR_LEFT");Serial.print(": ");Serial.println(addr);
+    
+    sprintf(pres, "%02X%02X%02X%02X", (unsigned char)report->advData[20], (unsigned char)report->advData[19], (unsigned char)report->advData[18], (unsigned char)report->advData[17]);
+    uint32_t y = hex2int(pres);
+    float pressure = y/100000.00;
+    //Serial.print("Pres: ");Serial.print(pressure);Serial.println(" bar");
+    tpmsPress[2] = pressure;
+
+    sprintf(temp, "%02X%02X%02X%02X", (unsigned char)report->advData[24], (unsigned char)report->advData[23], (unsigned char)report->advData[22], (unsigned char)report->advData[21]);
+    uint32_t x = hex2int(temp);
+    float tmpr = x/100.00;
+    //Serial.print("Temp: ");Serial.print(tmpr);Serial.println("°C");
+    tpmsTemp[2] = tmpr;
+
+    Serial.println(" ");
+  }
+  else if (strcmp (SMAC4, addr) == 0) {
+    Serial.print("Sensor ");Serial.print("REAR_RIGHT");Serial.print(": ");Serial.println(addr);
+    
+    sprintf(pres, "%02X%02X%02X%02X", (unsigned char)report->advData[20], (unsigned char)report->advData[19], (unsigned char)report->advData[18], (unsigned char)report->advData[17]);
+    uint32_t y = hex2int(pres);
+    float pressure = y/100000.00;
+    //Serial.print("Pres: ");Serial.print(pressure);Serial.println(" bar");
+    tpmsPress[3] = pressure;
+
+    sprintf(temp, "%02X%02X%02X%02X", (unsigned char)report->advData[24], (unsigned char)report->advData[23], (unsigned char)report->advData[22], (unsigned char)report->advData[21]);
+    uint32_t x = hex2int(temp);
+    float tmpr = x/100.00;
+    //Serial.print("Temp: ");Serial.print(tmpr);Serial.println("°C");
+    tpmsTemp[3] = tmpr;
+
+    Serial.println(" ");
+  }
 }
 
 void sendTpms()
