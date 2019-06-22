@@ -46,10 +46,10 @@ const String FUNCTION_LIST[] = {"TPMS", "OIL"};
 #define OIL  1
 
 /* TPMS Data */
-#define FRONT_RIGHT 0
-#define FRONT_LEFT  1
-#define REAR_RIGHT  2
-#define REAR_LEFT   3
+#define FRONT_LEFT  0
+#define FRONT_RIGHT 1
+#define REAR_LEFT   2
+#define REAR_RIGHT  3
 
 /* Tire pressure */
 float tpmsPress[4] = { 0.0, 0.0, 0.0, 0.0 };
@@ -320,77 +320,52 @@ void reportCallback(advertisementReport_t *report) {
   
   char addr[16];
   sprintf(addr, "%02X%02X%02X%02X%02X%02X", (unsigned char)report->advData[11], (unsigned char)report->advData[12], (unsigned char)report->advData[13], (unsigned char)report->advData[14], (unsigned char)report->advData[15], (unsigned char)report->advData[16]);
-  Serial.print("Addr.: ");Serial.println(addr);
-  Serial.println(" ");
   char pres[10];
   char temp[10];
+
   if (strcmp (SMAC1, addr) == 0) {
-    Serial.print("Sensor ");Serial.print("FRONT_LEFT");Serial.print(": ");Serial.println(addr);
-    
     sprintf(pres, "%02X%02X%02X%02X", (unsigned char)report->advData[20], (unsigned char)report->advData[19], (unsigned char)report->advData[18], (unsigned char)report->advData[17]);
     uint32_t y = hex2int(pres);
     float pressure = y/100000.00;
-    //Serial.print("Pres: ");Serial.print(pressure);Serial.println(" bar");
     tpmsPress[0] = pressure;
 
     sprintf(temp, "%02X%02X%02X%02X", (unsigned char)report->advData[24], (unsigned char)report->advData[23], (unsigned char)report->advData[22], (unsigned char)report->advData[21]);
     uint32_t x = hex2int(temp);
     float tmpr = x/100.00;
-    //Serial.print("Temp: ");Serial.print(tmpr);Serial.println("°C");
     tpmsTemp[0] = tmpr;
-
-    Serial.println(" ");
   }
   else if (strcmp (SMAC2, addr) == 0) {
-    Serial.print("Sensor ");Serial.print("FRONT_RIGHT");Serial.print(": ");Serial.println(addr);
-    
     sprintf(pres, "%02X%02X%02X%02X", (unsigned char)report->advData[20], (unsigned char)report->advData[19], (unsigned char)report->advData[18], (unsigned char)report->advData[17]);
     uint32_t y = hex2int(pres);
     float pressure = y/100000.00;
-    //Serial.print("Pres: ");Serial.print(pressure);Serial.println(" bar");
     tpmsPress[1] = pressure;
 
     sprintf(temp, "%02X%02X%02X%02X", (unsigned char)report->advData[24], (unsigned char)report->advData[23], (unsigned char)report->advData[22], (unsigned char)report->advData[21]);
     uint32_t x = hex2int(temp);
     float tmpr = x/100.00;
-    //Serial.print("Temp: ");Serial.print(tmpr);Serial.println("°C");
     tpmsTemp[1] = tmpr;
-
-    Serial.println(" ");
   }
   else if (strcmp (SMAC3, addr) == 0) {
-    Serial.print("Sensor ");Serial.print("REAR_LEFT");Serial.print(": ");Serial.println(addr);
-    
     sprintf(pres, "%02X%02X%02X%02X", (unsigned char)report->advData[20], (unsigned char)report->advData[19], (unsigned char)report->advData[18], (unsigned char)report->advData[17]);
     uint32_t y = hex2int(pres);
     float pressure = y/100000.00;
-    //Serial.print("Pres: ");Serial.print(pressure);Serial.println(" bar");
     tpmsPress[2] = pressure;
 
     sprintf(temp, "%02X%02X%02X%02X", (unsigned char)report->advData[24], (unsigned char)report->advData[23], (unsigned char)report->advData[22], (unsigned char)report->advData[21]);
     uint32_t x = hex2int(temp);
     float tmpr = x/100.00;
-    //Serial.print("Temp: ");Serial.print(tmpr);Serial.println("°C");
     tpmsTemp[2] = tmpr;
-
-    Serial.println(" ");
   }
-  else if (strcmp (SMAC4, addr) == 0) {
-    Serial.print("Sensor ");Serial.print("REAR_RIGHT");Serial.print(": ");Serial.println(addr);
-    
+  else if (strcmp (SMAC4, addr) == 0) {    
     sprintf(pres, "%02X%02X%02X%02X", (unsigned char)report->advData[20], (unsigned char)report->advData[19], (unsigned char)report->advData[18], (unsigned char)report->advData[17]);
     uint32_t y = hex2int(pres);
     float pressure = y/100000.00;
-    //Serial.print("Pres: ");Serial.print(pressure);Serial.println(" bar");
     tpmsPress[3] = pressure;
 
     sprintf(temp, "%02X%02X%02X%02X", (unsigned char)report->advData[24], (unsigned char)report->advData[23], (unsigned char)report->advData[22], (unsigned char)report->advData[21]);
     uint32_t x = hex2int(temp);
     float tmpr = x/100.00;
-    //Serial.print("Temp: ");Serial.print(tmpr);Serial.println("°C");
     tpmsTemp[3] = tmpr;
-
-    Serial.println(" ");
   }
 }
 
