@@ -1,7 +1,7 @@
 /*
  * Interface Mazda MZD to various data sources and actions.
  * 
- * jayrock     26-June-2019  Port to Nano
+ * jayrock     26-June-2019  Port to Nano - stabilized serial protocol - optional output to OLED
  * wolfix      12-June-2019  Fixed protocol syntax
  * wolfix      09-June-2019  Initial Version
  * 
@@ -13,6 +13,13 @@
 SYSTEM_MODE(SEMI_AUTOMATIC); 
 #endif
 */
+
+#include <Arduino.h>
+#include <U8x8lib.h>
+
+#define SERIAL_READ_DELAY 100
+
+#define USE_OLED 1 //set 0 to disable
 
 #define MAX_BUF_LEN 255
 char buf[MAX_BUF_LEN]; 
@@ -45,6 +52,21 @@ const String FUNCTION_LIST[] = {"TPMS", "OIL"};
 #define FRONT_LEFT  1
 #define REAR_RIGHT  2
 #define REAR_LEFT   3
+
+/*OLED constructor and setup*/
+#define SCL 2
+#define SDA 0
+U8X8_SH1106_128X64_NONAME_SW_I2C u8x8(/* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);   // OLEDs without Reset of the Display
+void setup_OLED(void)
+{
+  u8x8.begin();
+  u8x8.setPowerSave(0);
+  u8x8.setFont(u8x8_font_px437wyse700b_2x2_f); // more fonts at https://github.com/olikraus/u8g2/wiki/fntlist8x8
+  u8x8.drawString(0,0,"FL:");
+  u8x8.drawString(0,2,"FR:");
+  u8x8.drawString(0,4,"RL:");
+  u8x8.drawString(0,6,"RR:");
+}
 
 /* Tire pressure */
 float tpmsPress[4] = { 0.0, 0.0, 0.0, 0.0 };
@@ -81,9 +103,8 @@ void setup() {
   blinkLed( 500);
 
   Serial.begin( 115200);
-//  Serial.begin( 9600);
 
-  //Serial.println("setup.....");
+  setup_OLED();
 }
 
 void loop() {
@@ -152,7 +173,7 @@ char readCommand() {
     /*Serial.print("Serial.available() = ");
     Serial.println(Serial.available());*/
     commandChar = Serial.read();
-    delay(100);
+    delay(SERIAL_READ_DELAY);
 
     /*Serial.print("commandChar :");
     Serial.println(commandChar);
@@ -179,7 +200,7 @@ char readCommand() {
         //Serial.println("MAX_BUF_LEN");
         break; 
         }
-      delay(100);
+      delay(SERIAL_READ_DELAY);
     }
     /*Serial.println("nix mehr available");*/
   }
@@ -357,6 +378,8 @@ void sendTpms()
     tpmsTemp[REAR_LEFT], tpmsPress[REAR_LEFT],
     tpmsTemp[REAR_RIGHT], tpmsPress[REAR_RIGHT])*/
   String buf;
+  char charBuf[52];
+
 
   buf += F("FL: ");
   buf += String(tpmsTemp[FRONT_LEFT], 1);
@@ -379,6 +402,26 @@ void sendTpms()
   buf += String(tpmsPress[REAR_RIGHT], 2);
  
   sendMoreData(buf);
+
+  if(USE_OLED) {
+      /*String(tpmsTemp[FRONT_LEFT], 1).toCharArray(charBuf, 52);
+      u8x8.drawString(4,0,charBuf);
+      String(tpmsTemp[FRONT_RIGHT], 1).toCharArray(charBuf, 52);
+      u8x8.drawString(4,1,charBuf);
+      String(tpmsTemp[REAR_LEFT], 1).toCharArray(charBuf, 52);
+      u8x8.drawString(4,2,charBuf);
+      String(tpmsTemp[REAR_RIGHT], 1).toCharArray(charBuf, 52);
+      u8x8.drawString(4,3,charBuf);*/
+      String(tpmsPress[FRONT_LEFT], 2).toCharArray(charBuf, 52);
+      u8x8.drawString(8,0,charBuf);
+      String(tpmsPress[FRONT_RIGHT], 2).toCharArray(charBuf, 52);
+      u8x8.drawString(8,2,charBuf);
+      String(tpmsPress[REAR_LEFT], 2).toCharArray(charBuf, 52);
+      u8x8.drawString(8,4,charBuf);
+      String(tpmsPress[REAR_RIGHT], 2).toCharArray(charBuf, 52);
+      u8x8.drawString(8,6,charBuf);
+    }
+  
 }
 
 void getOil()
