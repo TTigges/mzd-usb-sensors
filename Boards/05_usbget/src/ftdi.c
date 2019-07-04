@@ -12,6 +12,7 @@
 #define FTDI_DEVICE_OUT_REQTYPE (LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | LIBUSB_ENDPOINT_OUT)
 #define FTDI_DEVICE_IN_REQTYPE (LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | LIBUSB_ENDPOINT_IN)
 
+/* Request types */
 #define SIO_RESET          0
 #define SIO_MODEM_CTRL     1 
 #define SIO_SET_FLOW_CTRL  2
@@ -21,21 +22,31 @@
 #define SIO_SET_EVENT_CHAR 6
 #define SIO_SET_ERROR_CHAR 7
 
+/* Reset request */
 #define SIO_RESET_SIO 0
 
-/* flow control */
+/* Flow control request */
 #define SIO_DISABLE_FLOW_CTRL 0x0
 #define SIO_RTS_CTS_HS (0x1 << 8)
 #define SIO_DTR_DSR_HS (0x2 << 8)
 #define SIO_XON_XOFF_HS (0x4 << 8)
 
 
+/* FTDI specific libusb initialization code.
+ * Sets communication parameters like baud rate, number of data bits,
+ * parity...
+ * 
+ * Returns: RC_OK on success
+ *          RC_ERROR on any error 
+ */
 returnCode initFTDI( struct libusb_device_handle *devH) 
 {
 	unsigned short value = 0;
 	unsigned short index = 1;
-	
-	
+
+
+	/* Reset FTDI device.
+	 */ 
 	if (libusb_control_transfer(devH,
 								FTDI_DEVICE_OUT_REQTYPE,
                                 SIO_RESET,
@@ -49,7 +60,9 @@ returnCode initFTDI( struct libusb_device_handle *devH)
 	}
 	
 	
-	/* Bits   7                              0x0007
+	/* Set communication parameters: 8N1, break off
+	 * 
+	 * Bits   7                              0x0007
 	 *        8                              0x0008
 	 * 
 	 * Parity N         0 0000 0000
@@ -80,20 +93,23 @@ returnCode initFTDI( struct libusb_device_handle *devH)
 		return RC_ERROR;
 	}
 
-	/* value = 3000000 / baud rate                           */
-	
-	/* 9600 baud */
-	//value = 0x38;
-	//index = 0x41;
 
-	/* 19200 baud */
+	/* Set baud rate: 19200
+	 * 
+	 * value = 3000000 / baud rate
+	 *
+	 *  9600 baud
+	 *	  value = 0x38;
+	 *    index = 0x41;
+	 * 19200 baud
+	 *    value = 0x9c;
+	 *    index = 0x80;
+	 * 115384 baud 
+	 *    value = 0x1a;
+	 *    index = 0x00;
+	 */
 	value = 0x9c;
 	index = 0x80;
-	
-	/* 115384 baud */
-	//value = 0x1a;
-	//index = 0x00;
-	
 
 	if (libusb_control_transfer(devH,
 								FTDI_DEVICE_OUT_REQTYPE,
@@ -107,6 +123,9 @@ returnCode initFTDI( struct libusb_device_handle *devH)
 		return RC_ERROR;
 	}
 
+
+	/* Flow control
+	 */
 	value = 0;
 	index = 1;
 
@@ -124,8 +143,10 @@ returnCode initFTDI( struct libusb_device_handle *devH)
 		return RC_ERROR;
 	}
 
-	value = 17;
-	value |= 0x0000;
+
+	/* Disable event character
+	 */
+	value = 0;
 
     if (libusb_control_transfer(devH,
 								FTDI_DEVICE_OUT_REQTYPE,
@@ -135,7 +156,7 @@ returnCode initFTDI( struct libusb_device_handle *devH)
 								NULL,
 								0,
 								TRANSMIT_TIMEOUT_MSEC) < 0) {
-		printfLog( "Failed to set event char.");
+		printfLog( "Failed to disable event char.");
 		return RC_ERROR;
 	}
 	

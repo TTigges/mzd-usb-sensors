@@ -15,10 +15,20 @@
 #include <sys/time.h>
 #include <sys/file.h>
 
+
 static FILE *debug = NULL;
 static FILE *logFile = NULL;
 static int lockFile = -1;
 
+
+static void strcatToLower( char *target, const char *source);
+
+
+/* ******************* export functions ********************* */
+
+/* Open log file if it hasn't been opened before and write to it.
+ * Note that this function also prints to stderr.
+ */
 void printfLog( const char *format, ...)
 {
 	if( logFile == NULL) {
@@ -39,6 +49,9 @@ void printfLog( const char *format, ...)
 	va_end( vargs);
 }
 
+/* If debug output is enabled print to debug stream.
+ * Debug output is enabled by setDebugStream() with a non-null argument.
+ */
 void printfDebug( const char *format, ...)
 {
 	if( debug != NULL) {
@@ -51,22 +64,18 @@ void printfDebug( const char *format, ...)
 	}	
 }
 
+/* Set debug output stream.
+ * stream == null disables debug output.
+ */
 void setDebugStream( FILE *stream)
 {
 	debug = stream;
 }
 
-void strcatToLower( char *target, const char *source)
-{
-	while( *target != '\0') { target++; }
-	while( *source != '\0') {
-		*target = isupper( *source) ? tolower( *source) : *source;
-		target++;
-		source++;
-	}
-	*target = '\0';
-}
-
+/* Timestamp in milliseconds.
+ * Note: The returned value may have no relation to wall clock time
+ * if we are running on a micro controller.
+ */
 long timeMSec()
 {
 	struct timeval tp;
@@ -75,6 +84,10 @@ long timeMSec()
 	return (long)tp.tv_sec * 1000 + (long)tp.tv_usec / 1000;
 }
 
+/* Open a file in the OUTPUT_PATH directory.
+ * If the resulting path is to long or there was an error during 
+ * file open this function returns NULL.
+ */
 FILE *openFileForWrite( const char *name, const char *ext)
 {
 	FILE *fp;
@@ -102,6 +115,9 @@ FILE *openFileForWrite( const char *name, const char *ext)
 	return fp;
 }
 
+/* Acquire an exclusive lock on the lock file.
+ * The lock file is created in OUTPUT_PATH.
+ */
 returnCode acquireLock()
 {
 	char filePath[MAX_FILE_PATH_LEN];
@@ -116,7 +132,7 @@ returnCode acquireLock()
 		strcat( filePath, LOCK_FILE);
 	}
 	else {
-		fprintf( stderr, "acquireLock(): File path to long.\n");
+		printfLog( "acquireLock(): File path to long.\n");
 		return RC_ERROR;
 	}
 
@@ -140,7 +156,7 @@ returnCode acquireLock()
 			if( rcFlock && errno == EWOULDBLOCK) {
 				usleep( LOCK_SLEEP_MSEC * USEC_TO_MSEC);
 				sleepMsec += LOCK_SLEEP_MSEC;
-				if( sleepMsec >= LOCK_SLEEP_LIMIT_MSEC) {
+				if( sleepMsec >= LOCK_LIMIT_MSEC) {
 					break;
 				}
 			}
@@ -159,6 +175,8 @@ returnCode acquireLock()
 	return RC_OK;
 }
 
+/* Release previously acquired lock.
+ */
 void releaseLock()
 {
 	if( lockFile >= 0) {
@@ -166,4 +184,20 @@ void releaseLock()
 		close( lockFile);
 		lockFile = -1;
 	}
+}
+
+/* ******************* static functions ********************* */
+
+/* Append source to target with toLower() conversion.
+ * Target gets null terminated in any case.
+ */
+static void strcatToLower( char *target, const char *source)
+{
+	while( *target != '\0') { target++; }
+	while( *source != '\0') {
+		*target = isupper( *source) ? tolower( *source) : *source;
+		target++;
+		source++;
+	}
+	*target = '\0';
 }

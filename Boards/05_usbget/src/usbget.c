@@ -133,6 +133,10 @@
 #include <usb.h>
 #include <protocol.h>
 
+
+static const char* VERSION = "0.1.0";
+
+
 #define MAX_DEVICENAME_LEN  20
 static char deviceName[MAX_DEVICENAME_LEN];
 static usbDevice *device = NULL;
@@ -152,9 +156,11 @@ static int parameterCount;
 enum RunOption {
     QUIT = 0,
     ERROR,
+    INFO,
 	LIST,
 	QUERY,
-	SET
+	SET,
+	CONFIG
 };
 
 #define MAX_OPTION_ACTION_SIZE 20
@@ -166,10 +172,12 @@ static void parseOptions( int argc, char **argv);
 static enum RunOption parseArguments( int argc, char **argv);
 static void usage();
 
+static void queryInfo( const char *action);
 static void listActions();
 static void printActions();
 static void queryAction( const char *action);
 static void setAction( const char *action);
+static void queryConfig( const char *action);
 
 /*******************************************************************/
 
@@ -207,7 +215,11 @@ int main( int argc, char **argv)
 	{
 		usbResetBuffers( device);
 
-		if( runOption == LIST) {
+		if( runOption == INFO) {
+			nothingToDo = FALSE;
+			queryInfo( optionAction);
+
+		} else if( runOption == LIST) {
 			nothingToDo = FALSE;
 			listActions();
 			printActions();
@@ -219,6 +231,10 @@ int main( int argc, char **argv)
 		} else if( runOption == SET) {
 			nothingToDo = FALSE;
 			setAction( optionAction);
+
+		} else if( runOption == CONFIG) {
+			nothingToDo = FALSE;
+			queryConfig( optionAction);
 			
 		} else if( runOption == QUIT || runOption == ERROR) {
 			break;
@@ -250,7 +266,7 @@ static void parseOptions( int argc, char **argv)
 	
 	deviceName[0] = '\0';
 	
-#define ALL_GETOPTS "lq:s:p:d:v?"
+#define ALL_GETOPTS "lc:i:q:s:p:d:v?"
 
 	while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
 		if( (char)opt ==  'v') {
@@ -291,6 +307,11 @@ static enum RunOption parseArguments( int argc, char **argv)
 			CHECK_STATE( 1);
 			runOption = LIST;
 
+        } else if((char)opt == 'i') {
+			CHECK_STATE( 1);
+			runOption = INFO;
+			strncpy( optionAction, optarg, MAX_OPTION_ACTION_SIZE);
+
 		} else if( (char)opt == 'q') {
 			CHECK_STATE(2);
 			runOption = QUERY;
@@ -299,6 +320,11 @@ static enum RunOption parseArguments( int argc, char **argv)
 		} else if( (char)opt == 's') {
 			CHECK_STATE(2);
 			runOption = SET;
+			strncpy( optionAction, optarg, MAX_OPTION_ACTION_SIZE);
+
+		} else if( (char)opt == 'c') {
+			CHECK_STATE(2);
+			runOption = CONFIG;
 			strncpy( optionAction, optarg, MAX_OPTION_ACTION_SIZE);
 
 		} else if( (char)opt == 'p') {
@@ -325,22 +351,56 @@ static void usage()
 	unsigned int idx = 0;
 	const char *name;
 	
-	printf("\nusage: usbget [options] [command ... ] \n\n");
-	printf("  Options:\n");	
-	printf("    -d device_name             USB device type\n");
-	
-	printf("       Valid device names:\n");
+	printf("\nusbget %s\n\n", VERSION);
+	printf(" usage: usbget [options] [command ... ] \n\n");
+	printf("   Options:\n");	
+	printf("     -d device_name             USB device type\n");
+	printf("        Valid device names:\n");
 	while( (name = usbEnumDeviceNames( &idx))) {
-		printf("         %s\n", name);
+		printf("          %s\n", name);
 	}
-	printf("    -v                         Enable debug output\n");
-	printf("    -?                         Print usage\n\n");
-	printf("  Commands:\n");
-	printf("    -l                         List supported actions\n");
-	printf("    -q action [-p param ... ]  Query action\n");
-	printf("    -s action [-p param ... ]  Set action\n\n");
-	printf("  In case no command is specified all supported actions"
+	printf("     -v                         Enable debug output\n");
+	printf("     -?                         Print usage\n\n");
+	printf("   Commands:\n");
+	printf("     -i request                 Query infos\n");
+	printf("     -i ALL                     Query all infos\n");
+	printf("     -l                         List supported actions\n");
+	printf("     -q action [-p param ... ]  Query action\n");
+	printf("     -s action [-p param ... ]  Set action\n");
+	printf("     -c action                  Query action config\n\n");
+	printf("   In case no command is specified all supported actions"
 	        " are queried.\n\n");
+}
+
+
+static void queryInfo( const char *action)
+{
+	char *line;
+	char commandChar;
+
+	printfDebug( "queryInfo()\n");
+
+	sendCommand( device, INFO_COMMAND, action);
+	for( int i=0; i<parameterCount; i++) {
+		sendMoreData( device, parameters[i]);
+	}
+	sendEOT( device);
+	
+	line = receiveLine( device, &commandChar);
+	
+	while( !isNoCommand( commandChar)) {
+		
+		if( isEOT( commandChar)) {
+			 break;
+		}
+		else if( isNACK( commandChar)) {
+			printfLog( "Error from USB device: %s\n", line);
+			break;
+		}
+		
+		printf("%s\n", line);
+		line = receiveLine( device, &commandChar);
+	}	
 }
 
 /* Query the device for supported actions.
@@ -473,6 +533,36 @@ static void setAction( const char *action)
 		
 		line = receiveLine( device, &commandChar);
 	}
+}
+
+static void queryConfig( const char *action)
+{
+	char *line;
+	char commandChar;
+
+	printfDebug( "queryConfig()\n");
+
+	sendCommand( device, QUERY_CONFIG, action);
+	for( int i=0; i<parameterCount; i++) {
+		sendMoreData( device, parameters[i]);
+	}
+	sendEOT( device);
+	
+	line = receiveLine( device, &commandChar);
+	
+	while( !isNoCommand( commandChar)) {
+		
+		if( isEOT( commandChar)) {
+			 break;
+		}
+		else if( isNACK( commandChar)) {
+			printfLog( "Error from USB device: %s\n", line);
+			break;
+		}
+
+		printf("%s\n", line);		
+		line = receiveLine( device, &commandChar);
+	}		
 }
 
 /*******************************************************************/

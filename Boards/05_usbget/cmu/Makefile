@@ -27,7 +27,7 @@ path:
 	mkdir -p /tmp/mnt/data_persist/dev/bin
 
 $(TARGET): $(MODULES)
-	$(CC) $(LDFLAGS) -o $(TARGET) $(MODULES)
+	$(CC) -o $(TARGET) $(MODULES) $(LDFLAGS)
 
 protocol.o: ../src/protocol.c ../src/support.h ../src/protocol.h
 	$(CC) $(CFLAGS) -c ../src/protocol.c

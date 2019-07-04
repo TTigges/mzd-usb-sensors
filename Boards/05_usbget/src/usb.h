@@ -10,6 +10,7 @@
 #define COMMAND_TIMEOUT_MSEC   5000
 #define RECEIVE_TIMEOUT_MSEC   1000
 #define TRANSMIT_TIMEOUT_MSEC  5000
+/* Must be < 16 msec. for FTDI */
 #define DRAIN_TIMEOUT_MSEC        1
 
 #define RECEIVE_BUFFER_SIZE      64

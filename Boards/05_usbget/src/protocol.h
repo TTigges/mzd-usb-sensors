@@ -8,13 +8,29 @@
 #include <usb.h>
 
 /* Protocol command characters */
-static const char NO_COMMAND          = '\0';
-static const char LIST_ACTIONS        = 'L';
-static const char QUERY_ACTION        = 'Q';
-static const char SET_ACTION          = 'S';
-static const char MORE_DATA           = '+';
-static const char END_OF_TRANSMISSION = '.';
-static const char NACK_OR_ERROR       = '/';
+#define NO_COMMAND           '\0'
+#define QUERY_CONFIG         'C'
+#define INFO_COMMAND         'I'
+#define LIST_ACTIONS         'L'
+#define QUERY_ACTION         'Q'
+#define SET_ACTION           'S'
+#define MORE_DATA            '+'
+#define END_OF_TRANSMISSION  '.'
+#define NACK_OR_ERROR        '/'
+
+/*
+typedef enum {
+	NO_COMMAND         = '\0',
+	QUERY_CONFIG        = 'C',
+	INFO_COMMAND        = 'I',
+    LIST_ACTIONS =        'L',
+    QUERY_ACTION =        'Q',
+    SET_ACTION =          'S',
+    MORE_DATA =           '+',
+    END_OF_TRANSMISSION = '.',
+    NACK_OR_ERROR =       '/'
+} ProtocolChars;
+*/
 
 #define isNoCommand( cmd) (cmd == NO_COMMAND)
 #define isEOT( cmd) (cmd == END_OF_TRANSMISSION)

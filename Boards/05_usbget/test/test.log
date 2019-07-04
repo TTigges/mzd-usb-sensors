@@ -1,0 +1,47 @@
+--- usage ---
+
+usbget 0.1.0
+
+ usage: usbget [options] [command ... ] 
+
+   Options:
+     -d device_name             USB device type
+        Valid device names:
+          redbear_duo
+          arduino_pro
+          arduino_nano
+          arduino_nano_clone
+     -v                         Enable debug output
+     -?                         Print usage
+
+   Commands:
+     -i request                 Query infos
+     -i ALL                     Query all infos
+     -l                         List supported actions
+     -q action [-p param ... ]  Query action
+     -s action [-p param ... ]  Set action
+     -c action                  Query action config
+
+   In case no command is specified all supported actions are queried.
+
+--- arduino_nano list ---
+Error finding USB device: vendor=0x403 product=0x6001
+--- arduino_pro list ---
+Error finding USB device: vendor=0x403 product=0x6001
+--- redbear_duo list ---
+TPMS
+OIL
+WS2801
+--- redbear_duo info ---
+VERSION=0.1.1
+--- redbear_duo config ---
+FL=80EACA100326
+FR=81EACA2002C0
+RL=82EACA300633
+RR=83EACA400619
+csum=1696
+--- redbear_duo query ---
+FL: 0.0 0.00 FR: 0.0 0.00 RL: 0.0 0.00 RR: 0.0 0.00
+oiltemp: 122.8 oilpress: 3.91
+cat: /tmp/mnt/data_persist/dev/bin/ws2801.out: Datei oder Verzeichnis nicht gefunden
+--- redbear_duo set ---

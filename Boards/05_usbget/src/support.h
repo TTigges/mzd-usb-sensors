@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
+
 #ifndef FALSE
 #define FALSE (0)
 #define TRUE  (!FALSE)
@@ -36,21 +37,44 @@ typedef int returnCode;
 
 /* microsecond to millisecond conversion */
 #define USEC_TO_MSEC           1000
-#define LOCK_SLEEP_MSEC         100
-#define LOCK_SLEEP_LIMIT_MSEC  2000
 
+/* Wait this long to acquire lock */
+#define LOCK_LIMIT_MSEC        5000
+#define LOCK_SLEEP_MSEC         100
+
+
+/* Open log file if it hasn't been opened before and write to it.
+ * Note that this function also prints to stderr.
+ */
 void printfLog( const char *format, ...);
 
+/* If debug output is enabled print to debug stream.
+ * Debug output is enabled by setDebugStream() with a non-null argument.
+ */
 void printfDebug( const char *format, ...);
 
+/* Set debug output stream.
+ * stream == null disables debug output.
+ */
 void setDebugStream( FILE *stream);
 
+/* Open a file in the OUTPUT_PATH directory.
+ * If the resulting path is to long or there was an error during 
+ * file open this function returns NULL.
+ */
 FILE *openFileForWrite( const char *name, const char *ext);
 
-void strcatToLower( char *target, const char *source);
-
+/* Timestamp in milliseconds.
+ * Note: The returned value may have no relation to wall clock time
+ * if we are running on a micro controller.
+ */
 long timeMSec();
 
+/* Acquire an exclusive lock on the lock file.
+ * The lock file is created in OUTPUT_PATH.
+ */
 returnCode acquireLock();
 
+/* Release previously acquired lock.
+ */
 void releaseLock();

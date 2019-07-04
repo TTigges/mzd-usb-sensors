@@ -1,7 +1,7 @@
 /*
  * protocol.c
  * 
- * Communication protocol.
+ * A simple communication protocol.
  * 
  */
  
@@ -15,7 +15,7 @@
 static char sendBuffer[MAX_BUFFER_SIZE];
 static int sendBufferPtr;
 
-/* received line without command char */
+/* Received line without command char */
 static char bufferedLine[MAX_BUFFER_SIZE];
 
 
@@ -30,37 +30,15 @@ char *receiveLine( usbDevice *device, char *commandChar)
 {
 	char ch;
 	int ptr = 0;
-	boolean skip_next = FALSE;
-	long startTimeMSec = timeMSec();
 	
 	*commandChar = NO_COMMAND;
-
 
 	for(;;) {
 
 		ch = usbGetChar( device);
-	
-		if( timeMSec() > startTimeMSec + COMMAND_TIMEOUT_MSEC) {
-			printfLog( "receiveLine() timed out after %d msec.\n",
-				       COMMAND_TIMEOUT_MSEC);
-			break;
-		}
-		 
-		/* @TODO HACK!!!
-		 * Drop ascii 17 + 96 characters gotten from arduino... F*ck
-		 * 17 is device control 1 aka CTRL-Q  =  Xon Handshake
-		 */
-		if( skip_next ) {
-			skip_next = FALSE;
-			continue;
-		}
-		
+			
 	    if( ch == '\0') { break; }
 		if( ch == '\n') { break; }
-		
-		/* @TODO HACK !!! */
-		if( ch == 17) { skip_next = TRUE; continue; }
-
 		if( ch < ' ') { continue; }
 		
 	    if( *commandChar == NO_COMMAND) {
@@ -79,25 +57,40 @@ char *receiveLine( usbDevice *device, char *commandChar)
 	return bufferedLine;
 }
 
+/* Send "more data" protocol line to device.
+ */
 returnCode sendMoreData( usbDevice *device, const char *data)
 {
 	return sendCommand( device, MORE_DATA, data);
 }
 
+/* Send "end of transmission" protocol line to device.
+ */
 returnCode sendEOT( usbDevice *device)
 {
 	return sendCommand( device, END_OF_TRANSMISSION, NULL);
 }
 
+/* Send "error" protocol line to device.
+ */
 returnCode sendError( usbDevice *device, const char *message)
 {
 	return sendCommand( device, NACK_OR_ERROR, message);
 }
 
+/* Send command to device.
+ * 
+ * data can be NULL.
+ */
 returnCode sendCommand( usbDevice *device, char command, const char *data)
 {
 	int copied;
 	
+	if( !device) {
+		printfLog( "Failed to send command '%c'. No device.", command);
+		return RC_ERROR;
+	}
+
 	sendBufferPtr = 0;
     sendBuffer[sendBufferPtr++] = command;
   

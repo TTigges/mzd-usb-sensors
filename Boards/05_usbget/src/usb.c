@@ -233,6 +233,7 @@ char usbGetChar( usbDevice *device)
 {
 	int rc;
 	char ch = '\0';
+	long startTimeMSec = timeMSec();
 
 	if( device == NULL) {
 		return ch;
@@ -244,33 +245,53 @@ char usbGetChar( usbDevice *device)
 	 * characters which is done in the calling function.
 	 */
 	if( receiveBufferPtr == receiveBufferEnd) {
+		while( TRUE) {
+			receiveBufferPtr = receiveBufferEnd = 0;
 		
-		receiveBufferPtr = receiveBufferEnd = 0;
-		
-		rc = libusb_bulk_transfer( device->devHandle,
-								   device->devInfo->in_endp,
+			if( timeMSec() > startTimeMSec + COMMAND_TIMEOUT_MSEC) {
+				printfLog( "receiveLine() timed out after %d msec.\n",
+						   COMMAND_TIMEOUT_MSEC);
+				break;
+			}
+
+			rc = libusb_bulk_transfer( device->devHandle,
+									device->devInfo->in_endp,
 								   (unsigned char*)receiveBuffer,
 								   RECEIVE_BUFFER_SIZE,
 								   &receiveBufferEnd,
 								   RECEIVE_TIMEOUT_MSEC);
 		
-		printfDebug( "usbGetChar %d chars rc=%d: ",
-			         receiveBufferEnd, rc);
+			printfDebug( "usbGetChar %d chars rc=%d: ",
+						 receiveBufferEnd, rc);
 		
-		for( int i=0; i<receiveBufferEnd; i++) {
-			printfDebug( "%d ", receiveBuffer[i]);
-		}
+			for( int i=0; i<receiveBufferEnd; i++) {
+				printfDebug( "%d ", receiveBuffer[i]);
+			}
 
-		printfDebug( "\n");
+			printfDebug( "\n");
 		
-		/* Only if the buffer is empty we can be sure that we run
-		 * into a timeout.
-		 */
-		if (rc == LIBUSB_ERROR_TIMEOUT && receiveBufferEnd == 0) {
-			printfLog( "Timeout waiting for USB bulk transfer.\n");
-		}
-		else if (rc < 0) {
-			printfLog( "Error waiting for USB bulk transfer. rc=%d\n", rc);
+			/* Only if the buffer is empty we can be sure that we run
+			* into a timeout.
+			*/
+			if (rc == LIBUSB_ERROR_TIMEOUT && receiveBufferEnd == 0) {
+				continue;
+			}
+			else if (rc < 0) {
+				printfLog( "Error waiting for USB bulk transfer. rc=%d\n", rc);
+				break;
+			}
+		
+			if( device->devInfo->special == INIT_FTDI) {
+				/* First two characters are status bytes.
+			 	 * We can skip them.
+				 */
+				if( receiveBufferEnd <= 2) {
+					continue;
+				} else {
+					receiveBufferPtr = 2;
+				}
+			}
+			break;
 		}
 	}
 
