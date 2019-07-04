@@ -20,94 +20,20 @@
  *     -?                         Print usage
  * 
  *   Commands:
+ *     -i request                 Query infos
+ *	   -i ALL                     Query all infos
  *     -l                         List supported actions
  *     -q action [-p param ... ]  Query action
  *     -s action [-p param ... ]  Set action
+ *     -c action                  Query action config
  * 
  *   In case no command is specified all supported actions are queried.
  * 
  * 
- * Line Protocol:
- * ==============
- * 
- * The protocol supports the following functions:
- * 
- *   + Query action list
- *       The micro controller supports a list of actions to be 
- *       performed on behalf of the MZD. The list may vary depending
- *       on the software release running on the micro controller.
- *       This function queries the list of supported actions.
- * 
- *   + Query action
- *       Execute an action on the micro controller and query the
- *       result state.
- * 
- *   + Set variable
- *       Modify the value of a variable on the micro controler or
- *       perform an action without fetching any results.
- * 
- * The protocol is character based (No binary data).
- * Every command starts with a single command character.
- * Every command is terminated by a newline character.
- * 
- * Supported command characters:
- * =============================
- *	 L     Query action list
- *   Q     Execute and query action
- *   S     Set variable
- *   +     Additional data
- *   .     End of transfer
- *   /     NACK or error response
- *   <nl>  Newline
  *
- * Examples
- * ========
- * 
- *      MZD         Transfer direction        Micro controller
- * ----------------------------------------------------------------
- *
- * Query action list
- * -----------------
- * L                         =>
- * .                         =>
- *                          <=             +action1
- *                          <=             +action2
- *                          <=             .
- *
- * Execute and query action
- * ------------------------
- * Qaction1                  =>
- * .                         =>
- *                          <=             +result line 1
- *                          <=             +result line 2
- *                          <=             .
- *
- * Execute and query action with optional parameter
- * ------------------------------------------------
- * Qaction1                  =>
- * +variable1=value1         =>
- * .                         =>
- *                          <=             +result line 1
- *                          <=             +result line 2
- *                          <=             .
- *
- * Variablen setzen
- * ----------------
- * Saction1                  =>
- * +variable1=value1         =>
- * .                         =>
- *                          <=             .
- * 
- * In case of an error
- * -------------------
- * Qblabla                   =>
- * .                         =>
- *                          <=             /Unknown function.
- * 
- * 
- * Credits
- * =======
- *   usbOpen() code based on mazda_tpms.c from Mazdaracerdude.
+ * NOTES
+ * =====
+ *   For a description of the line protcol see protocol.h
  * 
  * 
  * TODOs
@@ -127,12 +53,10 @@
  */
 
 #include <support.h>
- 
-#include <unistd.h>
-
 #include <usb.h>
 #include <protocol.h>
 
+#include <unistd.h>
 
 static const char* VERSION = "0.1.0";
 
@@ -376,7 +300,7 @@ static void usage()
 static void queryInfo( const char *action)
 {
 	char *line;
-	char commandChar;
+	ProtocolChar commandChar;
 
 	printfDebug( "queryInfo()\n");
 
@@ -408,7 +332,7 @@ static void queryInfo( const char *action)
 static void listActions()
 {
 	char *line;
-	char commandChar;
+	ProtocolChar commandChar;
 	
 	printfDebug( "ListActions()\n");
 
@@ -464,7 +388,7 @@ static void printActions()
 static void queryAction( const char *action)
 {
 	char *line;
-	char commandChar;
+	ProtocolChar commandChar;
 	FILE *fp = NULL;
 
 	printfDebug( "QueryAction()\n");
@@ -509,7 +433,7 @@ static void queryAction( const char *action)
 static void setAction( const char *action)
 {
 	char *line;
-	char commandChar;
+	ProtocolChar commandChar;
 
 	printfDebug( "SetAction()\n");
 
@@ -538,7 +462,7 @@ static void setAction( const char *action)
 static void queryConfig( const char *action)
 {
 	char *line;
-	char commandChar;
+	ProtocolChar commandChar;
 
 	printfDebug( "queryConfig()\n");
 

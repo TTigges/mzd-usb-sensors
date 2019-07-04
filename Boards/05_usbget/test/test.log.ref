@@ -42,6 +42,27 @@ RR=83EACA400619
 csum=1696
 --- redbear_duo query ---
 FL: 0.0 0.00 FR: 0.0 0.00 RL: 0.0 0.00 RR: 0.0 0.00
-oiltemp: 122.8 oilpress: 3.91
+oiltemp: 124.2 oilpress: 3.88
 cat: /tmp/mnt/data_persist/dev/bin/ws2801.out: Datei oder Verzeichnis nicht gefunden
 --- redbear_duo set ---
+--- negative tests ---
+--- wrong device ---
+No device info for device named: arduino_bla
+--- wrong action ---
+Error from USB device: Unknown function.
+--- long device name ---
+No device info for device named: redbear_duo_redbear_
+--- long action name ---
+Error from USB device: Unknown function.
+Initializing libusb.
+Opening USB device. [vendor=0x2b04,product=0xc058]
+Claiming USB interface.
+USB interface(s) claimed.
+USB device opened.
+DrainInput 0 chars rc=-7: 
+QueryAction()
+USB Send: QBLABLA7890BLABLA7890
+USB Send: .
+usbGetChar 20 chars rc=0: 47 85 110 107 110 111 119 110 32 102 117 110 99 116 105 111 110 46 13 10 
+USB Recv: cmd=/ 'Unknown function.'
+USB device closed.

@@ -6,8 +6,8 @@
  */
  
 #include <support.h>
-
 #include <protocol.h>
+
 
 /* Transfer buffers */
 #define MAX_BUFFER_SIZE         256
@@ -26,7 +26,7 @@ static char bufferedLine[MAX_BUFFER_SIZE];
  * separately.
  * It is NO_COMMAND when we run into a timeout.
  */
-char *receiveLine( usbDevice *device, char *commandChar)
+char *receiveLine( usbDevice *device, ProtocolChar *commandChar)
 {
 	char ch;
 	int ptr = 0;
@@ -42,7 +42,7 @@ char *receiveLine( usbDevice *device, char *commandChar)
 		if( ch < ' ') { continue; }
 		
 	    if( *commandChar == NO_COMMAND) {
-			*commandChar = ch;
+			*commandChar = TO_ProtocolChar( ch);
 		}
 		else {
 			bufferedLine[ptr++] = ch;
@@ -82,7 +82,9 @@ returnCode sendError( usbDevice *device, const char *message)
  * 
  * data can be NULL.
  */
-returnCode sendCommand( usbDevice *device, char command, const char *data)
+returnCode sendCommand( usbDevice *device,
+                        ProtocolChar command,
+                        const char *data)
 {
 	int copied;
 	
@@ -92,11 +94,11 @@ returnCode sendCommand( usbDevice *device, char command, const char *data)
 	}
 
 	sendBufferPtr = 0;
-    sendBuffer[sendBufferPtr++] = command;
+    sendBuffer[sendBufferPtr++] = TO_char(command);
   
     if( data != NULL && strlen(data) > 0) {
 		copied = strlen(data);
-		strncpy( &(sendBuffer[sendBufferPtr]), data, MAX_BUFFER_SIZE-3);
+		strncpy( &(sendBuffer[sendBufferPtr]), data, MAX_BUFFER_SIZE-2);
 		sendBufferPtr += copied;
 	}
 
