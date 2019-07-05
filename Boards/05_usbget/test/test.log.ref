@@ -42,14 +42,18 @@ RR=83EACA400619
 csum=1696
 --- redbear_duo query ---
 FL: 0.0 0.00 FR: 0.0 0.00 RL: 0.0 0.00 RR: 0.0 0.00
-oiltemp: 124.2 oilpress: 3.88
+oiltemp: 124.2 oilpress: 3.82
 cat: /tmp/mnt/data_persist/dev/bin/ws2801.out: Datei oder Verzeichnis nicht gefunden
 --- redbear_duo set ---
+--- redbear_duo set max parameters ---
+Error from USB device: Unknown function.
 --- negative tests ---
 --- wrong device ---
 No device info for device named: arduino_bla
 --- wrong action ---
 Error from USB device: Unknown function.
+--- to many parameters ---
+To many parameters: 11
 --- long device name ---
 No device info for device named: redbear_duo_redbear_
 --- long action name ---

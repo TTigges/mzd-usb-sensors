@@ -6,3 +6,4 @@ Boards/05_usbget/cmu/*.d
 Boards/05_usbget/cmu/usbget
 Boards/05_usbget/local/*.o
 Boards/05_usbget/local/usbget
+Boards/05_usbget/test/test.log

@@ -1,24 +1,24 @@
 /*
  * Transparently fetch and push data from/to MZD to/from USB device.
- * 
+ *
  * When run the program connects to a micro controller connected to
- * the USB bus, fetches data and stores the result in a file in 
+ * the USB bus, fetches data and stores the result in a file in
  * /tmp/mnt/data_persist/dev/bin
- * 
- * The filename is the action name converted to lower case with 
+ *
+ * The filename is the action name converted to lower case with
  * extension ".out".
- * 
- * 
+ *
+ *
  * Command line options
  * ====================
- * 
+ *
  * usage: usbget [options] [command ... ]
- * 
+ *
  *	 Options:
  *     -d device_name             Specify device to use.
  *     -v                         Verbose. Enable debug output.
  *     -?                         Print usage
- * 
+ *
  *   Commands:
  *     -i request                 Query infos
  *	   -i ALL                     Query all infos
@@ -26,22 +26,23 @@
  *     -q action [-p param ... ]  Query action
  *     -s action [-p param ... ]  Set action
  *     -c action                  Query action config
- * 
+ *
  *   In case no command is specified all supported actions are queried.
- * 
- * 
+ *
+ *
  *
  * NOTES
  * =====
  *   For a description of the line protcol see protocol.h
- * 
- * 
+ *
+ *
  * TODOs
  * =====
- * 
- * 
+ *
+ *
  * File History
  * ============
+ *   wolfix      04-Jul-2019  Code refactoring
  *   wolfix      25-Jun-2019  Fix getopt hang (signed/unsiged mismatch)
  *                            3 sec command timeout.
  *   wolfix                   Obey lock file
@@ -49,7 +50,7 @@
  *   wolfix                   Support command line options
  *   wolfix      13-Jun-2019  Minor fixes and code cleanup
  *   wolfix      12-Jun-2019  Initial version
- * 
+ *
  */
 
 #include <support.h>
@@ -111,22 +112,22 @@ int main( int argc, char **argv)
 	enum RunOption runOption;
 
 	parseOptions( argc, argv);
-		
+
 	if( strlen( deviceName) == 0) {
 		printfLog( "No device specified. "
 			       "Use -d option with supported device argument.\n");
 		exit(-1);
 	}
-	
+
 	/* Make sure only one instance accesses the USB port.
-	 * Multiple transfers in parallel would fail because the 
+	 * Multiple transfers in parallel would fail because the
 	 * port can only be opened by a single process.
 	 */
 	if( acquireLock() != RC_OK) {
 		printfLog( "Failed to acquire lock.\n");
 		exit(-1);
 	}
-	
+
 	device = usbOpen( deviceName);
 	if( !device) {
 		releaseLock();
@@ -159,11 +160,11 @@ int main( int argc, char **argv)
 		} else if( runOption == CONFIG) {
 			nothingToDo = FALSE;
 			queryConfig( optionAction);
-			
+
 		} else if( runOption == QUIT || runOption == ERROR) {
 			break;
 		}
-		
+
 		parameterCount = 0;
 	}
 
@@ -172,24 +173,24 @@ int main( int argc, char **argv)
 
 	} else if( nothingToDo) {
 		printfDebug( "Nothing to do, Querying all actions.\n");
-		
+
 		listActions();
 		for( int action=0; action < actionCount; action++) {
 			queryAction( actions[action]);
-		}		
+		}
 	}
 
 	usbClose( &device);
-	
+
 	releaseLock();
 }
 
 static void parseOptions( int argc, char **argv)
 {
 	int opt;
-	
+
 	deviceName[0] = '\0';
-	
+
 #define ALL_GETOPTS "lc:i:q:s:p:d:v?"
 
 	while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
@@ -204,25 +205,25 @@ static void parseOptions( int argc, char **argv)
 			exit(0);
         }
 	}
-	
+
 	optind = 1;
 }
 
 static enum RunOption parseArguments( int argc, char **argv)
 {
 	int state = 0;
-	
+
 #define CHECK_STATE( b) \
 	if( state == 1) {   \
 		optind -= b;    \
 		break;          \
 	}                   \
 	state++
-	
+
 	int opt;
 	enum RunOption runOption = QUIT;
-	
-	while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {  
+
+	while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
 
 		/* This cannot be a switch() because the CHECK_STATE macro
 		 * calls break to leave the loop.
@@ -240,7 +241,7 @@ static enum RunOption parseArguments( int argc, char **argv)
 			CHECK_STATE(2);
 			runOption = QUERY;
 			strncpy( optionAction, optarg, MAX_OPTION_ACTION_SIZE);
-			
+
 		} else if( (char)opt == 's') {
 			CHECK_STATE(2);
 			runOption = SET;
@@ -258,11 +259,12 @@ static enum RunOption parseArguments( int argc, char **argv)
 				break;
 			}
 
-			if( parameterCount >= MAX_PARAMETERS-1) {
+			if( parameterCount >= MAX_PARAMETERS) {
 				printfLog( "To many parameters: %s\n", optarg);
-				continue;
+				runOption = ERROR;
+				break;
 			}
-			
+
 			parameters[parameterCount++] = optarg;
 		}
     }
@@ -271,13 +273,13 @@ static enum RunOption parseArguments( int argc, char **argv)
 }
 
 static void usage()
-{	
+{
 	unsigned int idx = 0;
 	const char *name;
-	
+
 	printf("\nusbget %s\n\n", VERSION);
 	printf(" usage: usbget [options] [command ... ] \n\n");
-	printf("   Options:\n");	
+	printf("   Options:\n");
 	printf("     -d device_name             USB device type\n");
 	printf("        Valid device names:\n");
 	while( (name = usbEnumDeviceNames( &idx))) {
@@ -309,11 +311,11 @@ static void queryInfo( const char *action)
 		sendMoreData( device, parameters[i]);
 	}
 	sendEOT( device);
-	
+
 	line = receiveLine( device, &commandChar);
-	
+
 	while( !isNoCommand( commandChar)) {
-		
+
 		if( isEOT( commandChar)) {
 			 break;
 		}
@@ -321,10 +323,10 @@ static void queryInfo( const char *action)
 			printfLog( "Error from USB device: %s\n", line);
 			break;
 		}
-		
+
 		printf("%s\n", line);
 		line = receiveLine( device, &commandChar);
-	}	
+	}
 }
 
 /* Query the device for supported actions.
@@ -333,31 +335,31 @@ static void listActions()
 {
 	char *line;
 	ProtocolChar commandChar;
-	
+
 	printfDebug( "ListActions()\n");
 
 	actionCount = 0;
 	for( int i=0; i<MAX_ACTIONS; i++) {
 		actions[i] = NULL;
 	}
-	
+
 	sendCommand( device, LIST_ACTIONS, NULL);
 	for( int i=0; i<parameterCount; i++) {
 		sendMoreData( device, parameters[i]);
 	}
 	sendEOT( device);
-	
+
 	line = receiveLine( device, &commandChar);
-	
+
 	while( !isNoCommand( commandChar)) {
-		
+
 		if( isEOT( commandChar)) {
 			 break;
 		}
 		else if( isMoreData( commandChar)) {
-			
+
 			if( actionCount >= MAX_ACTIONS) { continue; }
-			
+
 			if( strlen(line) < MAX_ACTION_NAME_LEN) {
 				actions[actionCount] = (char*)calloc( 1, strlen(line)+1);
 				strcpy( actions[actionCount], line);
@@ -380,7 +382,7 @@ static void printActions()
 {
 	for( int action=0; action < actionCount; action++) {
 		printf("%s\n",actions[action]);
-	}	
+	}
 }
 
 /* Run actions and collect the result.
@@ -398,11 +400,11 @@ static void queryAction( const char *action)
 		sendMoreData( device, parameters[i]);
 	}
 	sendEOT( device);
-	
+
 	line = receiveLine( device, &commandChar);
-	
+
 	while( !isNoCommand( commandChar)) {
-		
+
 		if( isEOT( commandChar)) {
 			 break;
 		}
@@ -410,7 +412,7 @@ static void queryAction( const char *action)
 			if( fp == NULL) {
 				fp = openFileForWrite( action, OUTPUT_EXT);
 			}
-			
+
 			if (fp != NULL)	{
 				fprintf(fp, "%s\n", line);
 			}
@@ -419,10 +421,10 @@ static void queryAction( const char *action)
 			printfLog( "Error from USB device: %s\n", line);
 			break;
 		}
-		
+
 		line = receiveLine( device, &commandChar);
 	}
-	
+
 	if( fp != NULL) {
 		fclose( fp);
 	}
@@ -442,11 +444,11 @@ static void setAction( const char *action)
 		sendMoreData( device, parameters[i]);
 	}
 	sendEOT( device);
-	
+
 	line = receiveLine( device, &commandChar);
-	
+
 	while( !isNoCommand( commandChar)) {
-		
+
 		if( isEOT( commandChar)) {
 			 break;
 		}
@@ -454,7 +456,7 @@ static void setAction( const char *action)
 			printfLog( "Error from USB device: %s\n", line);
 			break;
 		}
-		
+
 		line = receiveLine( device, &commandChar);
 	}
 }
@@ -471,11 +473,11 @@ static void queryConfig( const char *action)
 		sendMoreData( device, parameters[i]);
 	}
 	sendEOT( device);
-	
+
 	line = receiveLine( device, &commandChar);
-	
+
 	while( !isNoCommand( commandChar)) {
-		
+
 		if( isEOT( commandChar)) {
 			 break;
 		}
@@ -484,9 +486,9 @@ static void queryConfig( const char *action)
 			break;
 		}
 
-		printf("%s\n", line);		
+		printf("%s\n", line);
 		line = receiveLine( device, &commandChar);
-	}		
+	}
 }
 
 /*******************************************************************/

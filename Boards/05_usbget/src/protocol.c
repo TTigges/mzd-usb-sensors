@@ -1,10 +1,10 @@
 /*
  * protocol.c
- * 
+ *
  * A simple communication protocol.
- * 
+ *
  */
- 
+
 #include <support.h>
 #include <protocol.h>
 
@@ -28,82 +28,82 @@ static char bufferedLine[MAX_BUFFER_SIZE];
  */
 char *receiveLine( usbDevice *device, ProtocolChar *commandChar)
 {
-	char ch;
-	int ptr = 0;
-	
-	*commandChar = NO_COMMAND;
+    char ch;
+    int ptr = 0;
 
-	for(;;) {
+    *commandChar = NO_COMMAND;
 
-		ch = usbGetChar( device);
-			
-	    if( ch == '\0') { break; }
-		if( ch == '\n') { break; }
-		if( ch < ' ') { continue; }
-		
-	    if( *commandChar == NO_COMMAND) {
-			*commandChar = TO_ProtocolChar( ch);
-		}
-		else {
-			bufferedLine[ptr++] = ch;
-			if( ptr >= (MAX_BUFFER_SIZE-1)) { break; }
-		}
-	}
-	
-	bufferedLine[ptr] = '\0';
+    for(;;) {
 
-	printfDebug( "USB Recv: cmd=%c '%s'\n", *commandChar, bufferedLine);
-	
-	return bufferedLine;
+        ch = usbGetChar( device);
+
+        if( ch == '\0') { break; }
+        if( ch == '\n') { break; }
+        if( ch < ' ') { continue; }
+
+        if( *commandChar == NO_COMMAND) {
+            *commandChar = TO_ProtocolChar( ch);
+        }
+        else {
+            bufferedLine[ptr++] = ch;
+            if( ptr >= (MAX_BUFFER_SIZE-1)) { break; }
+        }
+    }
+
+    bufferedLine[ptr] = '\0';
+
+    printfDebug( "USB Recv: cmd=%c '%s'\n", *commandChar, bufferedLine);
+
+    return bufferedLine;
 }
 
 /* Send "more data" protocol line to device.
  */
 returnCode sendMoreData( usbDevice *device, const char *data)
 {
-	return sendCommand( device, MORE_DATA, data);
+    return sendCommand( device, MORE_DATA, data);
 }
 
 /* Send "end of transmission" protocol line to device.
  */
 returnCode sendEOT( usbDevice *device)
 {
-	return sendCommand( device, END_OF_TRANSMISSION, NULL);
+    return sendCommand( device, END_OF_TRANSMISSION, NULL);
 }
 
 /* Send "error" protocol line to device.
  */
 returnCode sendError( usbDevice *device, const char *message)
 {
-	return sendCommand( device, NACK_OR_ERROR, message);
+    return sendCommand( device, NACK_OR_ERROR, message);
 }
 
 /* Send command to device.
- * 
+ *
  * data can be NULL.
  */
 returnCode sendCommand( usbDevice *device,
                         ProtocolChar command,
                         const char *data)
 {
-	int copied;
-	
-	if( !device) {
-		printfLog( "Failed to send command '%c'. No device.", command);
-		return RC_ERROR;
-	}
+    int copied;
 
-	sendBufferPtr = 0;
+    if( !device) {
+        printfLog( "Failed to send command '%c'. No device.", command);
+        return RC_ERROR;
+    }
+
+    sendBufferPtr = 0;
     sendBuffer[sendBufferPtr++] = TO_char(command);
-  
-    if( data != NULL && strlen(data) > 0) {
-		copied = strlen(data);
-		strncpy( &(sendBuffer[sendBufferPtr]), data, MAX_BUFFER_SIZE-2);
-		sendBufferPtr += copied;
-	}
 
-	sendBuffer[sendBufferPtr++] = '\n';
-	sendBuffer[sendBufferPtr++] = '\0';
-	
-	return usbSendBuffer( device, sendBuffer);
+    if( data != NULL && strlen(data) > 0) {
+        copied = strlen(data);
+        strncpy( &(sendBuffer[sendBufferPtr]), data, MAX_BUFFER_SIZE-2);
+        sendBufferPtr += copied;
+    }
+
+    sendBuffer[sendBufferPtr++] = '\n';
+    sendBuffer[sendBufferPtr++] = '\0';
+
+    return usbSendBuffer( device, sendBuffer);
 }

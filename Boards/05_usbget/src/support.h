@@ -1,8 +1,8 @@
 /*
  * support.h
- * 
+ *
  * Generic defines and utilities.
- * 
+ *
  */
 
 #include <stdlib.h>
@@ -59,7 +59,7 @@ void printfDebug( const char *format, ...);
 void setDebugStream( FILE *stream);
 
 /* Open a file in the OUTPUT_PATH directory.
- * If the resulting path is to long or there was an error during 
+ * If the resulting path is to long or there was an error during
  * file open this function returns NULL.
  */
 FILE *openFileForWrite( const char *name, const char *ext);

@@ -1,36 +1,36 @@
 /*
  * protocol.h
- * 
+ *
  * Communication protocol.
- * 
+ *
  * Line Protocol:
  * ==============
- * 
+ *
  * The protocol supports the following functions:
- * 
+ *
  *   + Query action list
- *       The micro controller supports a list of actions to be 
+ *       The micro controller supports a list of actions to be
  *       performed on behalf of the MZD. The list may vary depending
  *       on the software release running on the micro controller.
  *       This function queries the list of supported actions.
- * 
+ *
  *   + Query action
  *       Execute an action on the micro controller and query the
  *       result state.
- * 
+ *
  *   + Set variable
  *       Modify the value of a variable on the micro controler or
  *       perform an action without fetching any results.
- * 
+ *
  * The protocol is character based (No binary data).
  * Every command starts with a single command character.
  * Every command is terminated by a newline character.
- * 
- * 
+ *
+ *
  * Supported command characters:
  * =============================
  *   I     Query info (Version number... )
- *	 L     Query action list
+ *   L     Query action list
  *   Q     Execute and query action
  *   S     Set variable
  *   C     Query action configuration
@@ -39,10 +39,10 @@
  *   /     NACK or error response
  *   <nl>  Newline
  *
- * 
+ *
  * Examples
  * ========
- * 
+ *
  *      MZD         Transfer direction        Micro controller
  * ----------------------------------------------------------------
  *
@@ -77,13 +77,13 @@
  * +variable1=value1         =>
  * .                         =>
  *                          <=             .
- * 
+ *
  * In case of an error
  * -------------------
  * Qblabla                   =>
  * .                         =>
  *                          <=             /Unknown function.
- * 
+ *
  */
 
 #include <usb.h>
@@ -91,9 +91,9 @@
 
 /* Protocol command characters */
 typedef enum {
-	NO_COMMAND          = '\0',
-	QUERY_CONFIG        = 'C',
-	INFO_COMMAND        = 'I',
+    NO_COMMAND          = '\0',
+    QUERY_CONFIG        = 'C',
+    INFO_COMMAND        = 'I',
     LIST_ACTIONS        = 'L',
     QUERY_ACTION        = 'Q',
     SET_ACTION          = 'S',
@@ -133,7 +133,7 @@ returnCode sendEOT( usbDevice *device);
 returnCode sendError( usbDevice *device, const char *message);
 
 /* Send command to device.
- * 
+ *
  * data can be NULL.
  */
 returnCode sendCommand( usbDevice *device,

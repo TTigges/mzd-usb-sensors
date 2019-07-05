@@ -44,6 +44,9 @@ cat $P/ws2801.out >>test.log 2>&1
 echo --- redbear_duo set --- >>test.log
 sudo ../local/usbget -d redbear_duo -s WS2801 -p R=10 -p G=10 -p B=10 >>test.log 2>&1
 
+echo --- redbear_duo set max parameters --- >>test.log
+sudo ../local/usbget -d redbear_duo -s BLA -p 1 -p 2 -p 3 -p 4 -p 5 -p 6 -p 7 -p 8 -p 9 -p 10 >>test.log 2>&1
+
 # ====== negative tests
 echo --- negative tests --- >>test.log
 
@@ -52,6 +55,9 @@ sudo ../local/usbget -d arduino_bla -l >>test.log 2>&1
 
 echo --- wrong action --- >>test.log
 sudo ../local/usbget -d redbear_duo -q BLABLA >>test.log 2>&1
+
+echo --- to many parameters --- >>test.log
+sudo ../local/usbget -d redbear_duo -s BLA -p 1 -p 2 -p 3 -p 4 -p 5 -p 6 -p 7 -p 8 -p -9 -p 10 -p 11 >>test.log 2>&1
 
 echo --- long device name --- >>test.log
 sudo ../local/usbget -d redbear_duo_redbear_duo -q BLABLA >>test.log 2>&1
