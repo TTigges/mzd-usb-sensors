@@ -29,11 +29,32 @@
  *
  *   In case no command is specified all supported actions are queried.
  *
+ * Examples
+ * ========
+ *
+ *   $ usbget -d redbear_duo -l
+ *   TPMS
+ *   OIL
+ *   WS2801
+ *
+ *   $ usbget -d redbear_duo -q TPMS -q OLI
+ *
+ *   $ usbget -d redbear_duo -c TPMS
+ *   FL=80EACA100326
+ *   FR=81EACA2002C0
+ *   RL=82EACA300633
+ *   RR=83EACA400619
+ *   csum=1696
+ *
+ *   $ usbget -d redbear_duo -s WS2801 -p R=10 -p G=10 -p B=10
+ *
+ *   $ usbget -d redbear_duo -i ALL
+ *   VERSION=0.1.1
  *
  *
  * NOTES
  * =====
- *   For a description of the line protcol see protocol.h
+ *   For a description of the line protocol see protocol.h
  *
  *
  * TODOs
@@ -59,6 +80,7 @@
 
 #include <unistd.h>
 
+
 static const char* VERSION = "0.1.0";
 
 
@@ -78,7 +100,7 @@ static char *parameters[MAX_PARAMETERS];
 static int parameterCount;
 
 /* Run options selected via command line parameters */
-enum RunOption {
+typedef enum RunOption {
     QUIT = 0,
     ERROR,
     INFO,
@@ -86,30 +108,35 @@ enum RunOption {
 	QUERY,
 	SET,
 	CONFIG
-};
+} RunOption;
 
-#define MAX_OPTION_ACTION_SIZE 20
-static char optionAction[MAX_OPTION_ACTION_SIZE];
+#define MAX_OPTION_ACTION_LEN 20
+static char optionAction[MAX_OPTION_ACTION_LEN];
+
 
 /******************* static forward declarations *******************/
 
 static void parseOptions( int argc, char **argv);
-static enum RunOption parseArguments( int argc, char **argv);
+static RunOption parseArguments( int argc, char **argv);
 static void usage();
 
+static void queryActionList();
 static void queryInfo( const char *action);
-static void listActions();
-static void printActions();
 static void queryAction( const char *action);
 static void setAction( const char *action);
 static void queryConfig( const char *action);
+
+static void runCommand( ProtocolChar cmd,
+						const char *action,
+						const char *debugComment,
+						boolean print);
 
 /*******************************************************************/
 
 int main( int argc, char **argv)
 {
 	boolean nothingToDo = TRUE;
-	enum RunOption runOption;
+	RunOption runOption;
 
 	parseOptions( argc, argv);
 
@@ -146,8 +173,10 @@ int main( int argc, char **argv)
 
 		} else if( runOption == LIST) {
 			nothingToDo = FALSE;
-			listActions();
-			printActions();
+			queryActionList();
+			for( int action=0; action < actionCount; action++) {
+				printf("%s\n",actions[action]);
+			}
 
 		} else if( runOption == QUERY) {
 			nothingToDo = FALSE;
@@ -164,8 +193,6 @@ int main( int argc, char **argv)
 		} else if( runOption == QUIT || runOption == ERROR) {
 			break;
 		}
-
-		parameterCount = 0;
 	}
 
 	if( runOption == ERROR) {
@@ -174,7 +201,7 @@ int main( int argc, char **argv)
 	} else if( nothingToDo) {
 		printfDebug( "Nothing to do, Querying all actions.\n");
 
-		listActions();
+		queryActionList();
 		for( int action=0; action < actionCount; action++) {
 			queryAction( actions[action]);
 		}
@@ -185,6 +212,11 @@ int main( int argc, char **argv)
 	releaseLock();
 }
 
+/* Parse options.
+ * This function only honors option parameters like -d -v -?.
+ * Action parameters are parsed and processed later by
+ * parseArguments().
+ */
 static void parseOptions( int argc, char **argv)
 {
 	int opt;
@@ -198,7 +230,7 @@ static void parseOptions( int argc, char **argv)
 			setDebugStream( stdout);
 
 	    } else if( (char)opt == 'd') {
-			strncpy( deviceName, optarg, MAX_DEVICENAME_LEN);
+			SAFE_STRNCPY( deviceName, optarg, MAX_DEVICENAME_LEN);
 
 	    } else if( (char)opt == '?') {
 			usage();
@@ -209,19 +241,26 @@ static void parseOptions( int argc, char **argv)
 	optind = 1;
 }
 
-static enum RunOption parseArguments( int argc, char **argv)
+/* Parse action parameters.
+ *
+ * This function can be called multiple times and returns
+ * whenever there is enough information to execute the next action.
+ */
+static RunOption parseArguments( int argc, char **argv)
 {
 	int state = 0;
-
-#define CHECK_STATE( b) \
-	if( state == 1) {   \
-		optind -= b;    \
-		break;          \
-	}                   \
-	state++
-
 	int opt;
-	enum RunOption runOption = QUIT;
+	RunOption runOption = QUIT;
+
+#define CHECK_STATE( b, o) \
+	if( state == 1) {      \
+		optind -= b;       \
+		break;             \
+	}                      \
+	state++;               \
+	runOption = o
+
+	parameterCount = 0;
 
 	while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
 
@@ -229,28 +268,23 @@ static enum RunOption parseArguments( int argc, char **argv)
 		 * calls break to leave the loop.
 		 */
         if((char)opt == 'l') {
-			CHECK_STATE( 1);
-			runOption = LIST;
+			CHECK_STATE( 1, LIST);
 
         } else if((char)opt == 'i') {
-			CHECK_STATE( 1);
-			runOption = INFO;
-			strncpy( optionAction, optarg, MAX_OPTION_ACTION_SIZE);
+			CHECK_STATE( 1, INFO);
+			SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
 		} else if( (char)opt == 'q') {
-			CHECK_STATE(2);
-			runOption = QUERY;
-			strncpy( optionAction, optarg, MAX_OPTION_ACTION_SIZE);
+			CHECK_STATE(2, QUERY);
+			SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
 		} else if( (char)opt == 's') {
-			CHECK_STATE(2);
-			runOption = SET;
-			strncpy( optionAction, optarg, MAX_OPTION_ACTION_SIZE);
+			CHECK_STATE(2, SET);
+			SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
 		} else if( (char)opt == 'c') {
-			CHECK_STATE(2);
-			runOption = CONFIG;
-			strncpy( optionAction, optarg, MAX_OPTION_ACTION_SIZE);
+			CHECK_STATE(2, CONFIG);
+			SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
 		} else if( (char)opt == 'p') {
 			if( state == 0) {
@@ -295,107 +329,67 @@ static void usage()
 	printf("     -s action [-p param ... ]  Set action\n");
 	printf("     -c action                  Query action config\n\n");
 	printf("   In case no command is specified all supported actions"
-	        " are queried.\n\n");
-}
-
-
-static void queryInfo( const char *action)
-{
-	char *line;
-	ProtocolChar commandChar;
-
-	printfDebug( "queryInfo()\n");
-
-	sendCommand( device, INFO_COMMAND, action);
-	for( int i=0; i<parameterCount; i++) {
-		sendMoreData( device, parameters[i]);
-	}
-	sendEOT( device);
-
-	line = receiveLine( device, &commandChar);
-
-	while( !isNoCommand( commandChar)) {
-
-		if( isEOT( commandChar)) {
-			 break;
-		}
-		else if( isNACK( commandChar)) {
-			printfLog( "Error from USB device: %s\n", line);
-			break;
-		}
-
-		printf("%s\n", line);
-		line = receiveLine( device, &commandChar);
-	}
+	       " are queried.\n\n");
 }
 
 /* Query the device for supported actions.
  */
-static void listActions()
+static void queryActionList()
 {
-	char *line;
-	ProtocolChar commandChar;
-
-	printfDebug( "ListActions()\n");
-
-	actionCount = 0;
-	for( int i=0; i<MAX_ACTIONS; i++) {
-		actions[i] = NULL;
-	}
-
-	sendCommand( device, LIST_ACTIONS, NULL);
-	for( int i=0; i<parameterCount; i++) {
-		sendMoreData( device, parameters[i]);
-	}
-	sendEOT( device);
-
-	line = receiveLine( device, &commandChar);
-
-	while( !isNoCommand( commandChar)) {
-
-		if( isEOT( commandChar)) {
-			 break;
-		}
-		else if( isMoreData( commandChar)) {
-
-			if( actionCount >= MAX_ACTIONS) { continue; }
-
-			if( strlen(line) < MAX_ACTION_NAME_LEN) {
-				actions[actionCount] = (char*)calloc( 1, strlen(line)+1);
-				strcpy( actions[actionCount], line);
-				actionCount++;
-			} else {
-				printfLog( "Action name exceeds length limit of %d: %s\n",
-					MAX_ACTION_NAME_LEN, line);
-			}
-		}
-		else if( isNACK( commandChar)) {
-			printfLog( "Error from USB device: %s\n", line);
-			break;
-		}
-
-		line = receiveLine( device, &commandChar);
-	}
-}
-
-static void printActions()
-{
-	for( int action=0; action < actionCount; action++) {
-		printf("%s\n",actions[action]);
-	}
+	runCommand( LIST_ACTIONS, NULL, "queryActionList()\n", FALSE);
 }
 
 /* Run actions and collect the result.
  */
 static void queryAction( const char *action)
 {
+	runCommand( QUERY_ACTION, action, "queryAction()\n", FALSE);
+}
+
+/* setAction is like query but do not expect (print) a result.
+ */
+static void setAction( const char *action)
+{
+	runCommand( SET_ACTION, action, "setAction()\n", FALSE);
+}
+
+/* Query device for version etc...
+ */
+static void queryInfo( const char *action)
+{
+	runCommand( INFO_COMMAND, action, "queryInfo()\n", TRUE);
+}
+
+/* Query device for action configuration.
+ */
+static void queryConfig( const char *action)
+{
+	runCommand( QUERY_CONFIG, action, "queryConfig()\n", TRUE);
+}
+
+/* Run any command and optionally collect the response.
+ *
+ * @TODO should return an error.
+ */
+static void runCommand( ProtocolChar cmd,
+						const char *action,
+						const char *debugComment,
+						boolean print)
+{
 	char *line;
 	ProtocolChar commandChar;
 	FILE *fp = NULL;
 
-	printfDebug( "QueryAction()\n");
+	printfDebug( debugComment);
 
-	sendCommand( device, QUERY_ACTION, action);
+	if( cmd == LIST_ACTIONS) {
+		actionCount = 0;
+		for( int i=0; i<MAX_ACTIONS; i++) {
+			actions[i] = NULL;
+		}
+	}
+
+	sendCommand( device, cmd, action);
 	for( int i=0; i<parameterCount; i++) {
 		sendMoreData( device, parameters[i]);
 	}
@@ -408,18 +402,45 @@ static void queryAction( const char *action)
 		if( isEOT( commandChar)) {
 			 break;
 		}
-		else if( isMoreData( commandChar)) {
-			if( fp == NULL) {
-				fp = openFileForWrite( action, OUTPUT_EXT);
-			}
-
-			if (fp != NULL)	{
-				fprintf(fp, "%s\n", line);
-			}
-		}
 		else if( isNACK( commandChar)) {
 			printfLog( "Error from USB device: %s\n", line);
 			break;
+		}
+		else if( isMoreData( commandChar)) {
+
+			if( cmd == LIST_ACTIONS) {
+
+				if( actionCount >= MAX_ACTIONS) {
+					printfLog( "Too many Actions: skipping %s\n", line);
+					continue;
+				}
+
+				if( strlen(line) < MAX_ACTION_NAME_LEN) {
+					actions[actionCount] = (char*)calloc( 1, strlen(line)+1);
+					strcpy( actions[actionCount], line);
+					actionCount++;
+				} else {
+					printfLog( "Action name exceeds length limit of %d: %s\n",
+						MAX_ACTION_NAME_LEN, line);
+				}
+
+			}
+			else if( cmd == QUERY_ACTION) {
+
+				if( fp == NULL) {
+					fp = openFileForWrite( action, OUTPUT_EXT);
+				}
+
+				if (fp != NULL)	{
+					fprintf(fp, "%s\n", line);
+				}
+
+			}
+			else {
+				if( print) {
+					printf("%s\n", line);
+				}
+            }
 		}
 
 		line = receiveLine( device, &commandChar);
@@ -427,67 +448,6 @@ static void queryAction( const char *action)
 
 	if( fp != NULL) {
 		fclose( fp);
-	}
-}
-
-/* Run actions but do not expect a result.
- */
-static void setAction( const char *action)
-{
-	char *line;
-	ProtocolChar commandChar;
-
-	printfDebug( "SetAction()\n");
-
-	sendCommand( device, SET_ACTION, action);
-	for( int i=0; i<parameterCount; i++) {
-		sendMoreData( device, parameters[i]);
-	}
-	sendEOT( device);
-
-	line = receiveLine( device, &commandChar);
-
-	while( !isNoCommand( commandChar)) {
-
-		if( isEOT( commandChar)) {
-			 break;
-		}
-		else if( isNACK( commandChar)) {
-			printfLog( "Error from USB device: %s\n", line);
-			break;
-		}
-
-		line = receiveLine( device, &commandChar);
-	}
-}
-
-static void queryConfig( const char *action)
-{
-	char *line;
-	ProtocolChar commandChar;
-
-	printfDebug( "queryConfig()\n");
-
-	sendCommand( device, QUERY_CONFIG, action);
-	for( int i=0; i<parameterCount; i++) {
-		sendMoreData( device, parameters[i]);
-	}
-	sendEOT( device);
-
-	line = receiveLine( device, &commandChar);
-
-	while( !isNoCommand( commandChar)) {
-
-		if( isEOT( commandChar)) {
-			 break;
-		}
-		else if( isNACK( commandChar)) {
-			printfLog( "Error from USB device: %s\n", line);
-			break;
-		}
-
-		printf("%s\n", line);
-		line = receiveLine( device, &commandChar);
 	}
 }
 

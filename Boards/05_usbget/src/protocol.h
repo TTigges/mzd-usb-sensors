@@ -90,7 +90,7 @@
 
 
 /* Protocol command characters */
-typedef enum {
+typedef enum ProtocolChar {
     NO_COMMAND          = '\0',
     QUERY_CONFIG        = 'C',
     INFO_COMMAND        = 'I',

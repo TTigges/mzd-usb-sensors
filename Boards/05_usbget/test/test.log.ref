@@ -33,7 +33,7 @@ TPMS
 OIL
 WS2801
 --- redbear_duo info ---
-VERSION=0.1.1
+VERSION=*.*.*
 --- redbear_duo config ---
 FL=80EACA100326
 FR=81EACA2002C0
@@ -41,9 +41,11 @@ RL=82EACA300633
 RR=83EACA400619
 csum=1696
 --- redbear_duo query ---
-FL: 0.0 0.00 FR: 0.0 0.00 RL: 0.0 0.00 RR: 0.0 0.00
-oiltemp: 124.2 oilpress: 3.82
-cat: /tmp/mnt/data_persist/dev/bin/ws2801.out: Datei oder Verzeichnis nicht gefunden
+FL: *.* *.* FR: *.* *.* RL: *.* *.* RR: *.* *.*
+oiltemp: *.* oilpress: *.*
+--- redbear_duo query multiple ---
+FL: *.* *.* FR: *.* *.* RL: *.* *.* RR: *.* *.*
+oiltemp: *.* oilpress: *.*
 --- redbear_duo set ---
 --- redbear_duo set max parameters ---
 Error from USB device: Unknown function.
@@ -55,7 +57,7 @@ Error from USB device: Unknown function.
 --- to many parameters ---
 To many parameters: 11
 --- long device name ---
-No device info for device named: redbear_duo_redbear_
+No device info for device named: redbear_duo_redbear
 --- long action name ---
 Error from USB device: Unknown function.
 Initializing libusb.
@@ -64,8 +66,8 @@ Claiming USB interface.
 USB interface(s) claimed.
 USB device opened.
 DrainInput 0 chars rc=-7: 
-QueryAction()
-USB Send: QBLABLA7890BLABLA7890
+queryAction()
+USB Send: QBLABLA7890BLABLA789
 USB Send: .
 usbGetChar 20 chars rc=0: 47 85 110 107 110 111 119 110 32 102 117 110 99 116 105 111 110 46 13 10 
 USB Recv: cmd=/ 'Unknown function.'

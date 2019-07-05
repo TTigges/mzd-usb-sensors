@@ -12,10 +12,11 @@ usbget
 |-local/
 |-m3-toolchain/
 |-src/
+|-test/
 |-Makefile
 |-Readme.md
 
 ## Kompilieren:
 "make" aufrufen
 
-Getestet mit Ubuntu 18.04.2
+Getestet mit Ubuntu 18.04.2, Debian 9.9

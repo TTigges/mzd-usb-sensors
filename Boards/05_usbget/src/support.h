@@ -43,6 +43,13 @@ typedef int returnCode;
 #define LOCK_SLEEP_MSEC         100
 
 
+#define SAFE_STRNCPY( target, source, maxlen) \
+	{                                         \
+		strncpy( target, source, maxlen);     \
+		target[maxlen-1] = '\0';              \
+    } while( FALSE)
+
+
 /* Open log file if it hasn't been opened before and write to it.
  * Note that this function also prints to stderr.
  */
