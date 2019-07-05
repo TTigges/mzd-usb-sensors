@@ -1,0 +1,74 @@
+--- usage ---
+
+usbget 0.1.0
+
+ usage: usbget [options] [command ... ] 
+
+   Options:
+     -d device_name             USB device type
+        Valid device names:
+          redbear_duo
+          arduino_pro
+          arduino_nano
+          arduino_nano_clone
+     -v                         Enable debug output
+     -?                         Print usage
+
+   Commands:
+     -i request                 Query infos
+     -i ALL                     Query all infos
+     -l                         List supported actions
+     -q action [-p param ... ]  Query action
+     -s action [-p param ... ]  Set action
+     -c action                  Query action config
+
+   In case no command is specified all supported actions are queried.
+
+--- arduino_nano list ---
+Error finding USB device: vendor=0x403 product=0x6001
+--- arduino_pro list ---
+Error finding USB device: vendor=0x403 product=0x6001
+--- redbear_duo list ---
+TPMS
+OIL
+WS2801
+--- redbear_duo info ---
+VERSION=*.*.*
+--- redbear_duo config ---
+FL=80EACA100326
+FR=81EACA2002C0
+RL=82EACA300633
+RR=83EACA400619
+csum=1696
+--- redbear_duo query ---
+FL: *.* *.* FR: *.* *.* RL: *.* *.* RR: *.* *.*
+oiltemp: *.* oilpress: *.*
+--- redbear_duo query multiple ---
+FL: *.* *.* FR: *.* *.* RL: *.* *.* RR: *.* *.*
+oiltemp: *.* oilpress: *.*
+--- redbear_duo set ---
+--- redbear_duo set max parameters ---
+Error from USB device: Unknown function.
+--- negative tests ---
+--- wrong device ---
+No device info for device named: arduino_bla
+--- wrong action ---
+Error from USB device: Unknown function.
+--- to many parameters ---
+To many parameters: 11
+--- long device name ---
+No device info for device named: redbear_duo_redbear
+--- long action name ---
+Error from USB device: Unknown function.
+Initializing libusb.
+Opening USB device. [vendor=0x2b04,product=0xc058]
+Claiming USB interface.
+USB interface(s) claimed.
+USB device opened.
+DrainInput 0 chars rc=-7: 
+queryAction()
+USB Send: QBLABLA7890BLABLA789
+USB Send: .
+usbGetChar 20 chars rc=0: 47 85 110 107 110 111 119 110 32 102 117 110 99 116 105 111 110 46 13 10 
+USB Recv: cmd=/ 'Unknown function.'
+USB device closed.

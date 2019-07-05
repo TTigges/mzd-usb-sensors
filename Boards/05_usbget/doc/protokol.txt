@@ -1,0 +1,86 @@
+
+Das Protokoll bietet folgende Funktionen:
+=========================================
+
+  * Funktionsliste abfragen
+      Der RedBear Mikrokontroller stellt Funktionen für das MZD bereit.
+      Diese Liste kann je nach Version variieren. Diese Funktion macht 
+      es dem MZD möglich die Liste der unterstützten Funktionen 
+      abzurufen.
+
+  * Funktion abfragen
+      Ermöglicht es dem MZD den aktuellen Status einer Funktion abzufragen.
+
+  * Variablen setzen
+      Damit können Variablen im Mikrokontroller geändert werden oder
+      Aktionen ausgelöst.
+
+
+
+Das Protokoll ist zeichenbasiert. (Keine Binärdaten)
+
+Jedes Kommando startet mit einem einzelnen Kommando Buchstaben.
+
+Jedes Kommando wird mit NewLine beendet.
+
+Das MZD ist master. 
+
+Der RedBear Microkontroller slave.
+
+
+Unterstützte Kommandos
+======================
+
+L          Funktionen auflisten
+Q          Abfrage einer Funktion
+S          Variable setzen
++          Antwortzeile
+.          Transferende
+<nl>       Newline
+
+
+Funktionen
+==========
+
+Master         Transferrichtung      Slave
+-----------------------------------------------------------------------
+
+Funktionsliste abfragen
+-----------------------
+L<nl>                 ==>
+                      <==            +funktion1<nl>
+                      <==            +funktion2<nl>
+                      <==            .<nl>
+
+Funktion abfragen
+-----------------
+Qfunktion<nl>         ==>
+                      <==            +variable1=wert1<nl>
+                      <==            +variable2=wert2<nl>
+                      <==            .<nl>
+
+Variablen setzen
+----------------
+Sfunktion<nl>         ==>
++variable1=wert1<nl>  ==>
+.<nl>                 ==>
+
+
+Beispiel:
+=========
+
+Master                               Slave
+------------------------------------------------------------
+
+L<nl>
+                                     +TPMS<nl>
+                                     +TEMP<nl>
+                                     .<nl>
+QTPMS<nl>
+                                     +RF=2.0 bar<nl>
+                                     +RR=2.1 bar<nl>
+                                     +LF=2.0 bar<nl>
+                                     +LR=2.1 bar<nl>
+                                     .<nl>
+
+
