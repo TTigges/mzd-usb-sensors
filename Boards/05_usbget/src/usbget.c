@@ -14,14 +14,14 @@
  *
  * usage: usbget [options] [command ... ]
  *
- *	 Options:
+ *   Options:
  *     -d device_name             Specify device to use.
  *     -v                         Verbose. Enable debug output.
  *     -?                         Print usage
  *
  *   Commands:
  *     -i request                 Query infos
- *	   -i ALL                     Query all infos
+ *     -i ALL                     Query all infos
  *     -l                         List supported actions
  *     -q action [-p param ... ]  Query action
  *     -s action [-p param ... ]  Set action
@@ -104,10 +104,10 @@ typedef enum RunOption {
     QUIT = 0,
     ERROR,
     INFO,
-	LIST,
-	QUERY,
-	SET,
-	CONFIG
+    LIST,
+    QUERY,
+    SET,
+    CONFIG
 } RunOption;
 
 #define MAX_OPTION_ACTION_LEN 20
@@ -127,89 +127,89 @@ static void setAction( const char *action);
 static void queryConfig( const char *action);
 
 static void runCommand( ProtocolChar cmd,
-						const char *action,
-						const char *debugComment,
-						boolean print);
+                        const char *action,
+                        const char *debugComment,
+                        boolean print);
 
 /*******************************************************************/
 
 int main( int argc, char **argv)
 {
-	boolean nothingToDo = TRUE;
-	RunOption runOption;
+    boolean nothingToDo = TRUE;
+    RunOption runOption;
 
-	parseOptions( argc, argv);
+    parseOptions( argc, argv);
 
-	if( strlen( deviceName) == 0) {
-		printfLog( "No device specified. "
-			       "Use -d option with supported device argument.\n");
-		exit(-1);
-	}
+    if( strlen( deviceName) == 0) {
+        printfLog( "No device specified. "
+                   "Use -d option with supported device argument.\n");
+        exit(-1);
+    }
 
-	/* Make sure only one instance accesses the USB port.
-	 * Multiple transfers in parallel would fail because the
-	 * port can only be opened by a single process.
-	 */
-	if( acquireLock() != RC_OK) {
-		printfLog( "Failed to acquire lock.\n");
-		exit(-1);
-	}
+    /* Make sure only one instance accesses the USB port.
+     * Multiple transfers in parallel would fail because the
+     * port can only be opened by a single process.
+     */
+    if( acquireLock() != RC_OK) {
+        printfLog( "Failed to acquire lock.\n");
+        exit(-1);
+    }
 
-	device = usbOpen( deviceName);
-	if( !device) {
-		releaseLock();
-		exit(-1);
-	}
+    device = usbOpen( deviceName);
+    if( !device) {
+        releaseLock();
+        exit(-1);
+    }
 
-	usbDrainInput( device);
+    usbDrainInput( device);
 
-	while( (runOption = parseArguments( argc, argv)))
-	{
-		usbResetBuffers( device);
+    while( (runOption = parseArguments( argc, argv)))
+    {
+        usbResetBuffers( device);
 
-		if( runOption == INFO) {
-			nothingToDo = FALSE;
-			queryInfo( optionAction);
+        if( runOption == INFO) {
+            nothingToDo = FALSE;
+            queryInfo( optionAction);
 
-		} else if( runOption == LIST) {
-			nothingToDo = FALSE;
-			queryActionList();
-			for( int action=0; action < actionCount; action++) {
-				printf("%s\n",actions[action]);
-			}
+        } else if( runOption == LIST) {
+            nothingToDo = FALSE;
+            queryActionList();
+            for( int action=0; action < actionCount; action++) {
+                printf("%s\n",actions[action]);
+            }
 
-		} else if( runOption == QUERY) {
-			nothingToDo = FALSE;
-			queryAction( optionAction);
+        } else if( runOption == QUERY) {
+            nothingToDo = FALSE;
+            queryAction( optionAction);
 
-		} else if( runOption == SET) {
-			nothingToDo = FALSE;
-			setAction( optionAction);
+        } else if( runOption == SET) {
+            nothingToDo = FALSE;
+            setAction( optionAction);
 
-		} else if( runOption == CONFIG) {
-			nothingToDo = FALSE;
-			queryConfig( optionAction);
+        } else if( runOption == CONFIG) {
+            nothingToDo = FALSE;
+            queryConfig( optionAction);
 
-		} else if( runOption == QUIT || runOption == ERROR) {
-			break;
-		}
-	}
+        } else if( runOption == QUIT || runOption == ERROR) {
+            break;
+        }
+    }
 
-	if( runOption == ERROR) {
-		printfDebug( "Exit with error.\n");
+    if( runOption == ERROR) {
+        printfDebug( "Exit with error.\n");
 
-	} else if( nothingToDo) {
-		printfDebug( "Nothing to do, Querying all actions.\n");
+    } else if( nothingToDo) {
+        printfDebug( "Nothing to do, Querying all actions.\n");
 
-		queryActionList();
-		for( int action=0; action < actionCount; action++) {
-			queryAction( actions[action]);
-		}
-	}
+        queryActionList();
+        for( int action=0; action < actionCount; action++) {
+            queryAction( actions[action]);
+        }
+    }
 
-	usbClose( &device);
+    usbClose( &device);
 
-	releaseLock();
+    releaseLock();
 }
 
 /* Parse options.
@@ -219,26 +219,26 @@ int main( int argc, char **argv)
  */
 static void parseOptions( int argc, char **argv)
 {
-	int opt;
+    int opt;
 
-	deviceName[0] = '\0';
+    deviceName[0] = '\0';
 
 #define ALL_GETOPTS "lc:i:q:s:p:d:v?"
 
-	while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
-		if( (char)opt ==  'v') {
-			setDebugStream( stdout);
+    while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
+        if( (char)opt ==  'v') {
+            setDebugStream( stdout);
 
-	    } else if( (char)opt == 'd') {
-			SAFE_STRNCPY( deviceName, optarg, MAX_DEVICENAME_LEN);
+        } else if( (char)opt == 'd') {
+            SAFE_STRNCPY( deviceName, optarg, MAX_DEVICENAME_LEN);
 
-	    } else if( (char)opt == '?') {
-			usage();
-			exit(0);
+        } else if( (char)opt == '?') {
+            usage();
+            exit(0);
         }
-	}
+    }
 
-	optind = 1;
+    optind = 1;
 }
 
 /* Parse action parameters.
@@ -248,59 +248,59 @@ static void parseOptions( int argc, char **argv)
  */
 static RunOption parseArguments( int argc, char **argv)
 {
-	int state = 0;
-	int opt;
-	RunOption runOption = QUIT;
+    int state = 0;
+    int opt;
+    RunOption runOption = QUIT;
 
 #define CHECK_STATE( b, o) \
-	if( state == 1) {      \
-		optind -= b;       \
-		break;             \
-	}                      \
-	state++;               \
-	runOption = o
+    if( state == 1) {      \
+        optind -= b;       \
+        break;             \
+    }                      \
+    state++;               \
+    runOption = o
 
-	parameterCount = 0;
+    parameterCount = 0;
 
-	while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
+    while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
 
-		/* This cannot be a switch() because the CHECK_STATE macro
-		 * calls break to leave the loop.
-		 */
+        /* This cannot be a switch() because the CHECK_STATE macro
+         * calls break to leave the loop.
+         */
         if((char)opt == 'l') {
-			CHECK_STATE( 1, LIST);
+            CHECK_STATE( 1, LIST);
 
         } else if((char)opt == 'i') {
-			CHECK_STATE( 1, INFO);
-			SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
+            CHECK_STATE( 1, INFO);
+            SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
-		} else if( (char)opt == 'q') {
-			CHECK_STATE(2, QUERY);
-			SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
+        } else if( (char)opt == 'q') {
+            CHECK_STATE(2, QUERY);
+            SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
-		} else if( (char)opt == 's') {
-			CHECK_STATE(2, SET);
-			SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
+        } else if( (char)opt == 's') {
+            CHECK_STATE(2, SET);
+            SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
-		} else if( (char)opt == 'c') {
-			CHECK_STATE(2, CONFIG);
-			SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
+        } else if( (char)opt == 'c') {
+            CHECK_STATE(2, CONFIG);
+            SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
-		} else if( (char)opt == 'p') {
-			if( state == 0) {
-				printfLog( "No action for parameter: %s\n", optarg);
-				runOption = ERROR;
-				break;
-			}
+        } else if( (char)opt == 'p') {
+            if( state == 0) {
+                printfLog( "No action for parameter: %s\n", optarg);
+                runOption = ERROR;
+                break;
+            }
 
-			if( parameterCount >= MAX_PARAMETERS) {
-				printfLog( "To many parameters: %s\n", optarg);
-				runOption = ERROR;
-				break;
-			}
+            if( parameterCount >= MAX_PARAMETERS) {
+                printfLog( "To many parameters: %s\n", optarg);
+                runOption = ERROR;
+                break;
+            }
 
-			parameters[parameterCount++] = optarg;
-		}
+            parameters[parameterCount++] = optarg;
+        }
     }
 
     return runOption;
@@ -308,63 +308,63 @@ static RunOption parseArguments( int argc, char **argv)
 
 static void usage()
 {
-	unsigned int idx = 0;
-	const char *name;
+    unsigned int idx = 0;
+    const char *name;
 
-	printf("\nusbget %s\n\n", VERSION);
-	printf(" usage: usbget [options] [command ... ] \n\n");
-	printf("   Options:\n");
-	printf("     -d device_name             USB device type\n");
-	printf("        Valid device names:\n");
-	while( (name = usbEnumDeviceNames( &idx))) {
-		printf("          %s\n", name);
-	}
-	printf("     -v                         Enable debug output\n");
-	printf("     -?                         Print usage\n\n");
-	printf("   Commands:\n");
-	printf("     -i request                 Query infos\n");
-	printf("     -i ALL                     Query all infos\n");
-	printf("     -l                         List supported actions\n");
-	printf("     -q action [-p param ... ]  Query action\n");
-	printf("     -s action [-p param ... ]  Set action\n");
-	printf("     -c action                  Query action config\n\n");
-	printf("   In case no command is specified all supported actions"
-	       " are queried.\n\n");
+    printf("\nusbget %s\n\n", VERSION);
+    printf(" usage: usbget [options] [command ... ] \n\n");
+    printf("   Options:\n");
+    printf("     -d device_name             USB device type\n");
+    printf("        Valid device names:\n");
+    while( (name = usbEnumDeviceNames( &idx))) {
+        printf("          %s\n", name);
+    }
+    printf("     -v                         Enable debug output\n");
+    printf("     -?                         Print usage\n\n");
+    printf("   Commands:\n");
+    printf("     -i request                 Query infos\n");
+    printf("     -i ALL                     Query all infos\n");
+    printf("     -l                         List supported actions\n");
+    printf("     -q action [-p param ... ]  Query action\n");
+    printf("     -s action [-p param ... ]  Set action\n");
+    printf("     -c action                  Query action config\n\n");
+    printf("   In case no command is specified all supported actions"
+           " are queried.\n\n");
 }
 
 /* Query the device for supported actions.
  */
 static void queryActionList()
 {
-	runCommand( LIST_ACTIONS, NULL, "queryActionList()\n", FALSE);
+    runCommand( LIST_ACTIONS, NULL, "queryActionList()\n", FALSE);
 }
 
 /* Run actions and collect the result.
  */
 static void queryAction( const char *action)
 {
-	runCommand( QUERY_ACTION, action, "queryAction()\n", FALSE);
+    runCommand( QUERY_ACTION, action, "queryAction()\n", FALSE);
 }
 
 /* setAction is like query but do not expect (print) a result.
  */
 static void setAction( const char *action)
 {
-	runCommand( SET_ACTION, action, "setAction()\n", FALSE);
+    runCommand( SET_ACTION, action, "setAction()\n", FALSE);
 }
 
 /* Query device for version etc...
  */
 static void queryInfo( const char *action)
 {
-	runCommand( INFO_COMMAND, action, "queryInfo()\n", TRUE);
+    runCommand( INFO_COMMAND, action, "queryInfo()\n", TRUE);
 }
 
 /* Query device for action configuration.
  */
 static void queryConfig( const char *action)
 {
-	runCommand( QUERY_CONFIG, action, "queryConfig()\n", TRUE);
+    runCommand( QUERY_CONFIG, action, "queryConfig()\n", TRUE);
 }
 
 /* Run any command and optionally collect the response.
@@ -372,83 +372,83 @@ static void queryConfig( const char *action)
  * @TODO should return an error.
  */
 static void runCommand( ProtocolChar cmd,
-						const char *action,
-						const char *debugComment,
-						boolean print)
+                        const char *action,
+                        const char *debugComment,
+                        boolean print)
 {
-	char *line;
-	ProtocolChar commandChar;
-	FILE *fp = NULL;
+    char *line;
+    ProtocolChar commandChar;
+    FILE *fp = NULL;
 
-	printfDebug( debugComment);
+    printfDebug( debugComment);
 
-	if( cmd == LIST_ACTIONS) {
-		actionCount = 0;
-		for( int i=0; i<MAX_ACTIONS; i++) {
-			actions[i] = NULL;
-		}
-	}
+    if( cmd == LIST_ACTIONS) {
+        actionCount = 0;
+        for( int i=0; i<MAX_ACTIONS; i++) {
+            actions[i] = NULL;
+        }
+    }
 
-	sendCommand( device, cmd, action);
-	for( int i=0; i<parameterCount; i++) {
-		sendMoreData( device, parameters[i]);
-	}
-	sendEOT( device);
+    sendCommand( device, cmd, action);
+    for( int i=0; i<parameterCount; i++) {
+        sendMoreData( device, parameters[i]);
+    }
+    sendEOT( device);
 
-	line = receiveLine( device, &commandChar);
+    line = receiveLine( device, &commandChar);
 
-	while( !isNoCommand( commandChar)) {
+    while( !isNoCommand( commandChar)) {
 
-		if( isEOT( commandChar)) {
-			 break;
-		}
-		else if( isNACK( commandChar)) {
-			printfLog( "Error from USB device: %s\n", line);
-			break;
-		}
-		else if( isMoreData( commandChar)) {
+        if( isEOT( commandChar)) {
+             break;
+        }
+        else if( isNACK( commandChar)) {
+            printfLog( "Error from USB device: %s\n", line);
+            break;
+        }
+        else if( isMoreData( commandChar)) {
 
-			if( cmd == LIST_ACTIONS) {
+            if( cmd == LIST_ACTIONS) {
 
-				if( actionCount >= MAX_ACTIONS) {
-					printfLog( "Too many Actions: skipping %s\n", line);
-					continue;
-				}
+                if( actionCount >= MAX_ACTIONS) {
+                    printfLog( "Too many Actions: skipping %s\n", line);
+                    continue;
+                }
 
-				if( strlen(line) < MAX_ACTION_NAME_LEN) {
-					actions[actionCount] = (char*)calloc( 1, strlen(line)+1);
-					strcpy( actions[actionCount], line);
-					actionCount++;
-				} else {
-					printfLog( "Action name exceeds length limit of %d: %s\n",
-						MAX_ACTION_NAME_LEN, line);
-				}
+                if( strlen(line) < MAX_ACTION_NAME_LEN) {
+                    actions[actionCount] = (char*)calloc( 1, strlen(line)+1);
+                    strcpy( actions[actionCount], line);
+                    actionCount++;
+                } else {
+                    printfLog( "Action name exceeds length limit of %d: %s\n",
+                        MAX_ACTION_NAME_LEN, line);
+                }
 
-			}
-			else if( cmd == QUERY_ACTION) {
-
-				if( fp == NULL) {
-					fp = openFileForWrite( action, OUTPUT_EXT);
-				}
-
-				if (fp != NULL)	{
-					fprintf(fp, "%s\n", line);
-				}
-
-			}
-			else {
-				if( print) {
-					printf("%s\n", line);
-				}
             }
-		}
+            else if( cmd == QUERY_ACTION) {
 
-		line = receiveLine( device, &commandChar);
-	}
+                if( fp == NULL) {
+                    fp = openFileForWrite( action, OUTPUT_EXT);
+                }
 
-	if( fp != NULL) {
-		fclose( fp);
-	}
+                if (fp != NULL) {
+                    fprintf(fp, "%s\n", line);
+                }
+
+            }
+            else {
+                if( print) {
+                    printf("%s\n", line);
+                }
+            }
+        }
+
+        line = receiveLine( device, &commandChar);
+    }
+
+    if( fp != NULL) {
+        fclose( fp);
+    }
 }
 
 /*******************************************************************/

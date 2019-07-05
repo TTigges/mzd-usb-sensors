@@ -44,9 +44,9 @@ typedef int returnCode;
 
 
 #define SAFE_STRNCPY( target, source, maxlen) \
-	{                                         \
-		strncpy( target, source, maxlen);     \
-		target[maxlen-1] = '\0';              \
+    {                                         \
+        strncpy( target, source, maxlen);     \
+        target[maxlen-1] = '\0';              \
     } while( FALSE)
 
 
