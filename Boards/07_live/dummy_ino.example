@@ -1,0 +1,70 @@
+/*
+ * dummy.ino
+ * 
+ * This is only a stub for new actions.
+ * Copy the file to a reasonable name and fill in the TODOs.
+ * 
+ */
+
+#ifdef DUMMY_SUPPORT
+
+size_t Dummy::setup(unsigned int eepromLocation)
+{
+  size_t sizeOfConfig = sizeof(dummyConfig);
+  
+  /* Remember where the configuration is stored in EEPROM */
+  configLocation = eepromLocation;
+  
+  EEPROM.get( eepromLocation, dummyConfig);
+
+  if( dummyConfig.checksum != computeChecksum( &dummyConfig, sizeOfConfig)) {
+    /* TODO: Set default values in case the checksum is wrong and there is no valid date in the EEPROM */
+
+
+    dummyConfig.checksum = computeChecksum( &dummyConfig, sizeOfConfig);
+
+    EEPROM.put( eepromLocation, dummyConfig);
+  }
+
+  /* TODO: Initialilzation code goes here */
+
+  
+  return (size_t)sizeOfConfig;
+}
+
+const char *Dummy::getName()
+{
+  /* TODO: replace with reasonable name */
+  return "DUMMY";
+}
+
+void Dummy::getData()
+{
+  /* TODO: implement */
+}
+
+void Dummy::sendData()
+{
+  /* TODO: implement */
+}
+
+void Dummy::sendConfig()
+{
+  /* TODO: implement */
+}
+
+void Dummy::setConfig()
+{
+  /* TODO Get new config data */
+  config_data = getIntParam( /* some config option key */, /* default value */ );
+
+  if( /* TODO configuration has changed  */ ) {
+
+    /* TODO set config data here */
+    
+    dummyConfig.checksum = computeChecksum( &dummyConfig, sizeof(dummyConfig));
+    EEPROM.put( configLocation, dummyConfig);
+  }  
+}
+
+#endif
