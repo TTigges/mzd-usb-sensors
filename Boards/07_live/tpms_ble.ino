@@ -3,6 +3,19 @@
  * 
  * Read TMPS Bluetooth Low Energy sensors.
  * 
+ * Supported functions:
+ * ====================
+ * 
+ * Query data: Yes
+ *   send tmps temperature and pressure
+ *   
+ * Query config: Yes
+ *   send smac for all sensors
+ *     Keys: FL, FR, RL, RR
+ *   
+ * Set config: Yes
+ *   set smac for all sensors
+ *     Keys: FL, FR, RL, RR
  */
 
 #ifdef TPMS_BLE_SUPPORT
@@ -113,6 +126,10 @@ void TpmsBLE::setConfig()
     EEPROM.put( configLocation, tpmsBLEConfig);
   }
 }
+
+
+/* ***************** PRIVATE *************************************************/
+
 
 boolean TpmsBLE::saveSMAC( const char *which, byte loc)
 {

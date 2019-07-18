@@ -15,6 +15,10 @@
 
 #define ERROR_COUNT             7
 
+/* This is a global error variable that can be set by flagError() in the action specific code.
+ * If this variable is set the corresponding error message is sent to the peer when 
+ * sendEOT() is called.
+ */
 uint8_t globalError = ERROR_NONE;
 
 const char *errorMsg[] = {
@@ -29,4 +33,6 @@ const char *errorMsg[] = {
 
 };
 
+/* Checksum type to checksum EEPROM configuration data.
+ */
 typedef uint16_t checksum_t;

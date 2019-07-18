@@ -3,6 +3,19 @@
  * 
  * Reading 433Mhz TPMS sensors.
  * 
+ * Supported functions:
+ * ====================
+ * 
+ * Query data: Yes
+ *   send tmps temperature and pressure
+ *   
+ * Query config: Yes
+ *   send smac for all sensors
+ *     Keys: FL, FR, RL, RR
+ *   
+ * Set config: Yes
+ *   set smac for all sensors
+ *     Keys: FL, FR, RL, RR
  */
 
 #ifdef TPMS_433_SUPPORT

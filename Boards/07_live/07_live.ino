@@ -2,16 +2,6 @@
  * Interface Mazda MZD to various data sources and actions.
  * 
  */
- 
-/* Select ONLY ONE of... */
-
-#define REDBEAR_DUO
-//#define ARDUINO_PRO
-//#define ARDUINO_NANO
-
-/* END PLATFORM SELECTION */
-
-
 
 #include "config.h"
 #include "util.h"
@@ -43,7 +33,7 @@ const char *INFO_LIST[] = {
  */
 #define ALL_INFO       0
 #define VERSION_INFO   1
-#define SIMULATE_INFO   2
+#define SIMULATE_INFO  2
 
 
 
@@ -86,6 +76,9 @@ void setup() {
     ;
   }
 
+
+  /* Register all supported actions.
+   */
 #ifdef TPMS_BLE_SUPPORT
   addAction( new TpmsBLE);
 #endif

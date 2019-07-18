@@ -3,6 +3,16 @@
  * 
  * Engine oil pressure and temperature.
  * 
+ * Supported functions:
+ * ====================
+ * 
+ * Query data: Yes
+ *   send oil temperature and pressure
+ *
+ * Query config: No
+ *   
+ * Set config: No
+ * 
  */
 
 #ifdef OIL_SUPPORT
@@ -49,19 +59,32 @@ void OilSensor::sendData()
 
 void OilSensor::sendConfig()
 {
-  /* Nothing to do */
+  /* Not supported */
 }
 
 void OilSensor::setConfig()
 {
-  /* Nothing to do */  
+  /* Not supported */
 }
 
-#define OIL_ABSZERO        273.15
-#define OIL_MAXANALOGREAD 4095.0
 
-float OilSensor::calcTemp(float tPinValue) {
-  
+/* ***************** PRIVATE *************************************************/
+
+#define OIL_ABSZERO  273.15
+
+#ifdef REDBEAR_DUO
+  #define OIL_MAXANALOGREAD 4095.0
+  #define OIL_PMINVAL        410.0
+  #define OIL_PMAXVAL       3689.0
+#endif
+#ifdef ARDUINO_GENERIC
+  #define OIL_MAXANALOGREAD 1023.0
+  #define OIL_PMINVAL        102.0
+  #define OIL_PMAXVAL        922.0
+#endif
+
+float OilSensor::calcTemp(float tPinValue)
+{  
   float T0 = 40 + OIL_ABSZERO;
   float T1 = 150 + OIL_ABSZERO;
   float R0 = 5830;
@@ -74,13 +97,13 @@ float OilSensor::calcTemp(float tPinValue) {
   return T0 * B / (B + T0 * log(RN/R0)) -OIL_ABSZERO;
 }
 
-float OilSensor::calcPress(float pPinValue) {
-  
-  if (pPinValue < 410) {
-    pPinValue = 410;
+float OilSensor::calcPress(float pPinValue)
+{  
+  if (pPinValue < OIL_PMINVAL) {
+    pPinValue = OIL_PMINVAL;
   }
-  else if (pPinValue > 3689) {
-    pPinValue = 3689;
+  else if (pPinValue > OIL_PMAXVAL) {
+    pPinValue = OIL_PMAXVAL;
   }
   
   return pPinValue * 0.00305250305250305 - 1.25;

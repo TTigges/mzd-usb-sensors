@@ -3,6 +3,18 @@
  * 
  * Control a RGB led via three analog outputs.
  * 
+ * Supported functions:
+ * ====================
+ * 
+ * Query data: No
+ *   
+ * Query config: Yes
+ *   send intensity per color
+ *     Keys: R, G, B
+ *   
+ * Set config: Yes
+ *   set intensity per color
+ *     Keys: R, G, B
  */
 
 #ifdef RGB_SUPPORT
@@ -34,7 +46,7 @@ void RgbAnalog::getData()
 
 void RgbAnalog::sendData()
 {
-  /* Nothing to do */
+  /* Not supported */
 }
 
 void RgbAnalog::sendConfig()
@@ -48,6 +60,10 @@ void RgbAnalog::setConfig()
 {
   setRGB( getIntParam("R", 0), getIntParam("G", 0),getIntParam("B", 0));
 }
+
+
+/* ***************** PRIVATE *************************************************/
+
 
 void RgbAnalog::setRGB( byte r, byte g, byte b)
 {

@@ -3,6 +3,23 @@
  * 
  * Control WS2801 LED strip.
  * 
+ * Supported functions:
+ * ====================
+ * 
+ * Query data: No
+ *   
+ * Query config: Yes
+ *   send intensity per color
+ *     Keys: R, G, B
+ *   send number of LEDs of the strip
+ *     Key: LEDS
+ *   
+ * Set config: Yes
+ *   set intensity per color
+ *     Keys: R, G, B
+ *   set number of LEDs of the strip
+ *     Key: LEDS
+ * 
  */
 
 #ifdef WS2801_SUPPORT
@@ -47,7 +64,7 @@ void WS2801::getData()
 
 void WS2801::sendData()
 {
-  /* Nothing to do */  
+  /* Not supported */
 }
 
 void WS2801::sendConfig()
@@ -69,8 +86,12 @@ void WS2801::setConfig()
     EEPROM.put( configLocation, ws2801Config);
   }
   
-  setWS2801( getIntParam("R", red), getIntParam("G", green), getIntParam("B", blue));
+  setWS2801( getIntParam("R", 0), getIntParam("G", 0), getIntParam("B", 0));
 }
+
+
+/* ***************** PRIVATE *************************************************/
+
 
 void WS2801::setWS2801( byte r, byte g, byte b)
 {

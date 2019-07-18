@@ -5,6 +5,17 @@
  *
  */
 
+
+/* Select ONLY ONE of... */
+
+#define REDBEAR_DUO
+//#define ARDUINO_PRO
+//#define ARDUINO_NANO
+
+/* END PLATFORM SELECTION */
+
+
+
 #ifdef REDBEAR_DUO
 
 #if defined(ARDUINO) 
