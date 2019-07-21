@@ -98,7 +98,9 @@ returnCode sendCommand( usbDevice *device,
 
     if( data != NULL && strlen(data) > 0) {
         copied = strlen(data);
-        strncpy( &(sendBuffer[sendBufferPtr]), data, MAX_BUFFER_SIZE-2);
+        strncpy( &(sendBuffer[sendBufferPtr]), data,
+                 MAX_BUFFER_SIZE-sendBufferPtr-1);
+
         sendBufferPtr += copied;
     }
 

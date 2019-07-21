@@ -3,13 +3,18 @@
  *
  * USB support.
  *
+ * File History
+ * ============
+ *   wolfix      21-Jul-2019  USB device open code.
+ *                            usbList() added
+ *                            Arduino Mico added.
  */
 
-#include <support.h>
+#include "support.h"
 
 #include <libusb.h>
-#include <usb.h>
-#include <ftdi.h>
+#include "usb.h"
+#include "ftdi.h"
 
 
 typedef struct deviceInfo_t {
@@ -36,6 +41,8 @@ static const deviceInfo_t device_info[] = {
         0x0403, 0x6001, 0x81, 0x02, 1, INIT_FTDI},
     {(const char*)"arduino_nano_clone",
         0x1a86, 0x7523, 0x81, 0x02, 1, INIT_CH340},
+    {(const char*)"arduino_micro",
+        0x2341, 0x8037, 0x83, 0x02, 2, INIT_NOTHING},
 
     /* END MARKER. Do not remove! */
     {(const char*)NULL, 0x0000, 0x0000, 0x00, 0x00, 0, INIT_NOTHING}
@@ -87,12 +94,62 @@ const char *usbEnumDeviceNames( unsigned int *idx) {
     return di->name;
 }
 
+/* List vendor ID and product ID of USB devices.
+ */
+void usbList()
+{
+    int rc;
+    int i;
+    ssize_t numDev;
+    libusb_device **devList;
+    libusb_device *dev;
+    struct libusb_device_descriptor desc;
+
+    rc = libusb_init( NULL);
+    if( rc < 0) {
+        printfLog( "Error initializing libusb: %s\n",
+                   libusb_error_name( rc));
+        return;
+    }
+
+    numDev = libusb_get_device_list( NULL, &devList);
+    if( numDev > 0)
+    {
+        for( i=0; i < numDev; i++)
+        {
+            dev = devList[i];
+            libusb_ref_device( dev);
+
+            rc = libusb_get_device_descriptor( dev, &desc);
+            if( rc < 0) {
+                printfLog( "Error getting device descriptor: %s\n",
+                           libusb_error_name( rc));
+            }
+
+            printf("VId=%04x PId=%04x\n", desc.idVendor, desc.idProduct);
+
+            libusb_unref_device( dev);
+        }
+    }
+
+    libusb_free_device_list( devList, 0);
+
+    libusb_exit( NULL);
+}
+
 /* Open USB device by vendor and product id.
  * Returns NULL if the device was not found or we run into an error.
  */
 usbDevice *usbOpen( const char *devName)
 {
     int rc;
+    int i;
+    ssize_t numDev;
+    libusb_device **devList;
+    libusb_device *dev;
+    libusb_device *devFound = NULL;
+    struct libusb_device_descriptor desc;
+    int if_num;
     usbDevice *device;
     const deviceInfo_t *devInfo = NULL;
     struct libusb_device_handle *devH = NULL;
@@ -113,16 +170,56 @@ usbDevice *usbOpen( const char *devName)
         return NULL;
     }
 
-    printfDebug( "Opening USB device. [vendor=%p,product=%p]\n",
+    printfDebug( "Searching for USB device: [vendor=%p,product=%p]\n",
                  devInfo->vendorId, devInfo->productId);
 
-    devH = libusb_open_device_with_vid_pid( NULL,
-                                            devInfo->vendorId,
-                                            devInfo->productId);
-    if( devH == NULL) {
-        printfLog(
-            "Error finding USB device: vendor=0x%x product=0x%x\n",
-            devInfo->vendorId, devInfo->productId);
+    numDev = libusb_get_device_list( NULL, &devList);
+    if( numDev > 0)
+    {
+        for( i=0; i < numDev; i++)
+        {
+            dev = devList[i];
+            libusb_ref_device( dev);
+
+            rc = libusb_get_device_descriptor( dev, &desc);
+            if( rc < 0) {
+                printfLog( "Error getting device descriptor: %s\n",
+                           libusb_error_name( rc));
+            }
+
+            if(    desc.idVendor  == devInfo->vendorId
+                && desc.idProduct == devInfo->productId)
+            {
+                devFound = dev;
+                break;
+            }
+
+            libusb_unref_device( dev);
+        }
+    }
+    else
+    {
+        printfLog( "No USB devices.\n");
+        usbClose( NULL);
+        return NULL;
+    }
+
+    if( devFound == NULL) {
+        printfLog( "No suitable USB device found.\n");
+        usbClose( NULL);
+        return NULL;
+    }
+
+    printfDebug( "Opening USB device.\n");
+
+    rc = libusb_open( devFound, &devH);
+
+    libusb_unref_device( devFound);
+    libusb_free_device_list( devList, 0);
+
+    if( rc < 0) {
+        printfLog( "Error opening USB device: %s\n",
+                   libusb_error_name( rc));
         usbClose( NULL);
         return NULL;
     }
@@ -130,7 +227,7 @@ usbDevice *usbOpen( const char *devName)
     printfDebug( "Claiming USB interface.\n");
 
     /* Detach kernel driver and claim interfaces. */
-    for (int if_num = 0; if_num < devInfo->ifCount; if_num++) {
+    for (if_num = 0; if_num < devInfo->ifCount; if_num++) {
         if (libusb_kernel_driver_active(devH, if_num)) {
             libusb_detach_kernel_driver(devH, if_num);
         }
@@ -222,7 +319,7 @@ returnCode usbSendBuffer( usbDevice *device, char *buf)
         return RC_ERROR;
     }
 
-    printfDebug( "USB Send: %s", buf);
+    printfDebug( "USB Send (%d) : %s", strlen(buf), buf);
 
     rc = libusb_bulk_transfer(device->devHandle,
                               device->devInfo->outEndp,
@@ -245,6 +342,7 @@ returnCode usbSendBuffer( usbDevice *device, char *buf)
 char usbGetChar( usbDevice *device)
 {
     int rc;
+    int i;
     char ch = '\0';
     long startTimeMSec = timeMSec();
 
@@ -277,7 +375,7 @@ char usbGetChar( usbDevice *device)
             printfDebug( "usbGetChar %d chars rc=%d: ",
                          device->receiveBufferEnd, rc);
 
-            for( int i=0; i < device->receiveBufferEnd; i++) {
+            for( i=0; i < device->receiveBufferEnd; i++) {
                 printfDebug( "%d ", device->receiveBuffer[i]);
             }
 
@@ -323,6 +421,7 @@ char usbGetChar( usbDevice *device)
 void usbDrainInput( usbDevice *device)
 {
     int rc;
+    int i;
 
     if( device == NULL) {
         return;
@@ -339,7 +438,7 @@ void usbDrainInput( usbDevice *device)
         printfDebug( "DrainInput %d chars rc=%d: ",
                      device->receiveBufferEnd, rc);
 
-        for( int i=0; i < device->receiveBufferEnd; i++) {
+        for( i=0; i < device->receiveBufferEnd; i++) {
             printfDebug( "%d ", device->receiveBuffer[i]);
         }
 

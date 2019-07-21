@@ -1,6 +1,6 @@
 --- usage ---
 
-usbget 0.1.0
+usbget 0.1.1
 
  usage: usbget [options] [command ... ] 
 
@@ -11,6 +11,7 @@ usbget 0.1.0
           arduino_pro
           arduino_nano
           arduino_nano_clone
+          arduino_micro
      -v                         Enable debug output
      -?                         Print usage
 
@@ -25,9 +26,9 @@ usbget 0.1.0
    In case no command is specified all supported actions are queried.
 
 --- arduino_nano list ---
-Error finding USB device: vendor=0x403 product=0x6001
+No suitable USB device found.
 --- arduino_pro list ---
-Error finding USB device: vendor=0x403 product=0x6001
+No suitable USB device found.
 --- redbear_duo list ---
 TPMS
 OIL
@@ -68,14 +69,15 @@ No device info for device named: redbear_duo_redbear
 --- long action name ---
 Error from USB device: Unknown action request.
 Initializing libusb.
-Opening USB device. [vendor=0x2b04,product=0xc058]
+Searching for USB device: [vendor=0x2b04,product=0xc058]
+Opening USB device.
 Claiming USB interface.
 USB interface(s) claimed.
 USB device opened.
 DrainInput 0 chars rc=-7: 
 queryAction()
-USB Send: QBLABLA7890BLABLA789
-USB Send: .
+USB Send (21) : QBLABLA7890BLABLA789
+USB Send (2) : .
 usbGetChar 26 chars rc=0: 47 85 110 107 110 111 119 110 32 97 99 116 105 111 110 32 114 101 113 117 101 115 116 46 13 10 
 USB Recv: cmd=/ 'Unknown action request.'
 USB device closed.

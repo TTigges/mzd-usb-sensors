@@ -38,6 +38,10 @@ typedef struct usbDevice usbDevice;
  */
 const char *usbEnumDeviceNames( unsigned int *idx);
 
+/* List vendor ID and product ID of USB devices.
+ */
+void usbList();
+
 /* Open USB device by vendor and product id.
  * Returns NULL if the device was not found or we run into an error.
  */
