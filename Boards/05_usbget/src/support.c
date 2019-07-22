@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include <time.h>
 #include <sys/time.h>
 #include <sys/file.h>
 
@@ -31,11 +32,44 @@ static void strcatToLower( char *target, const char *source);
  */
 void printfLog( const char *format, ...)
 {
+    long fileSize;
+    FILE *backupLogFile;
+    char buf;
+#define TS_MAX_LEN 20
+    char ts[TS_MAX_LEN];
+
     if( logFile == NULL) {
-        logFile = openFileForWrite( LOG_FILE_NAME, LOG_EXT);
+        logFile = openFileForWrite( LOG_FILE_NAME, LOG_EXT, "a+");
     }
 
     if( logFile != NULL) {
+        fseek(logFile, 0L, SEEK_END);
+        fileSize = ftell( logFile);
+
+        if( fileSize >= LOG_FILE_MAX_SIZE) {
+            backupLogFile =
+                openFileForWrite( LOG_FILE_NAME, LOG_BACKUP_EXT, "w");
+
+            if( backupLogFile != NULL) {
+                /* Copy logfile to backup */
+                fseek(logFile, 0L, SEEK_SET);
+                while( fread( &buf,(size_t)1,(size_t)1,logFile) == 1) {
+                    fwrite( &buf,(size_t)1,(size_t)1,backupLogFile);
+                }
+
+                fclose( backupLogFile);
+            }
+
+            /* Reopen original log file (truncate) */
+            fclose( logFile);
+            logFile = openFileForWrite( LOG_FILE_NAME, LOG_EXT, "w");
+        }
+    }
+
+    if( logFile != NULL) {
+        timestamp( ts, TS_MAX_LEN);
+        fprintf( logFile, "%s: ", ts);
+
         va_list vargs;
         va_start( vargs, format);
         vfprintf( logFile, format, vargs);
@@ -84,11 +118,29 @@ long timeMSec()
     return (long)tp.tv_sec * 1000 + (long)tp.tv_usec / 1000;
 }
 
+/* Return a timestamp with format "YYYY-DD-MM HH:MM:SS".
+ * Space available in ts should be at least 20 char.
+ */
+void timestamp( char *ts, size_t len)
+{
+    time_t now;
+    struct tm *timeinfo;
+
+    if( ts) {
+        time( &now);
+        timeinfo = localtime( &now);
+
+        strftime( ts, len, "%F %T", timeinfo);
+    }
+}
+
 /* Open a file in the OUTPUT_PATH directory.
  * If the resulting path is to long or there was an error during
  * file open this function returns NULL.
  */
-FILE *openFileForWrite( const char *name, const char *ext)
+FILE *openFileForWrite( const char *name,
+                        const char *ext,
+                        const char *mode)
 {
     FILE *fp;
     char filePath[MAX_FILE_PATH_LEN];
@@ -106,7 +158,7 @@ FILE *openFileForWrite( const char *name, const char *ext)
         return NULL;
     }
 
-    fp = fopen( filePath, "w");
+    fp = fopen( filePath, mode);
 
     if (fp == NULL) {
         fprintf( stderr, "Failed to open file: %s\n", filePath);

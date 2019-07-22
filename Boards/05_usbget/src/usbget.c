@@ -434,7 +434,7 @@ static void runCommand( ProtocolChar cmd,
             else if( cmd == QUERY_ACTION) {
 
                 if( fp == NULL) {
-                    fp = openFileForWrite( action, OUTPUT_EXT);
+                    fp = openFileForWrite( action, OUTPUT_EXT, "w");
                 }
 
                 if (fp != NULL) {
