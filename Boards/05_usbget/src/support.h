@@ -5,6 +5,10 @@
  *
  */
 
+#ifndef _USBGET_SUPPORT_H
+#define _USBGET_SUPPORT_H
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,10 +55,10 @@ typedef int returnCode;
 #define LOCK_SLEEP_MSEC         100
 
 
-#define SAFE_STRNCPY( target, source, maxlen) \
-    {                                         \
-        strncpy( target, source, maxlen);     \
-        target[maxlen-1] = '\0';              \
+#define SAFE_STRNCPY( target, source, maxlen)   \
+    {                                           \
+        strncpy( (target), (source), (maxlen)); \
+        target[(maxlen)-1] = '\0';              \
     } while( FALSE)
 
 
@@ -77,15 +81,13 @@ void setDebugStream( FILE *stream);
  * If the resulting path is to long or there was an error during
  * file open this function returns NULL.
  */
-FILE *openFileForWrite( const char *name,
-                        const char *ext,
-                        const char *mode);
+FILE *openFile( const char *name, const char *ext, const char *mode);
 
 /* Timestamp in milliseconds.
  * Note: The returned value may have no relation to wall clock time
  * if we are running on a micro controller.
  */
-long timeMSec();
+long timeMSec( void);
 
 /* Return a timestamp with format "YYYY-DD-MM HH:MM:SS".
  * Space available in ts should be at least 20 char.
@@ -95,8 +97,10 @@ void timestamp( char *ts, size_t len);
 /* Acquire an exclusive lock on the lock file.
  * The lock file is created in OUTPUT_PATH.
  */
-returnCode acquireLock();
+returnCode acquireLock( void);
 
 /* Release previously acquired lock.
  */
-void releaseLock();
+void releaseLock( void);
+
+#endif

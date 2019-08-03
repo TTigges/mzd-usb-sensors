@@ -5,8 +5,7 @@
  *
  */
 
-#include <support.h>
-#include <protocol.h>
+#include "protocol.h"
 
 
 /* Transfer buffers */

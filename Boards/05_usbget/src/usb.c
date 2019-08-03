@@ -10,12 +10,9 @@
  *                            Arduino Mico added.
  */
 
-#include "support.h"
-
-#include <libusb.h>
 #include "usb.h"
 #include "ftdi.h"
-
+#include "atmega32u4.h"
 
 typedef struct deviceInfo_t {
     const char *name;
@@ -24,13 +21,14 @@ typedef struct deviceInfo_t {
     unsigned char inEndp;
     unsigned char outEndp;
     int ifCount;
-    int special;
+    int special;               /* Which init code to run, see below */
 } deviceInfo_t;
 
 /* Run special init code */
 #define INIT_NOTHING       0
 #define INIT_FTDI          1
 #define INIT_CH340         2
+#define INIT_ATMEGA32U4    3
 
 static const deviceInfo_t device_info[] = {
     {(const char*)"redbear_duo",
@@ -42,7 +40,7 @@ static const deviceInfo_t device_info[] = {
     {(const char*)"arduino_nano_clone",
         0x1a86, 0x7523, 0x81, 0x02, 1, INIT_CH340},
     {(const char*)"arduino_micro",
-        0x2341, 0x8037, 0x83, 0x02, 2, INIT_NOTHING},
+        0x2341, 0x8037, 0x83, 0x02, 2, INIT_ATMEGA32U4},
 
     /* END MARKER. Do not remove! */
     {(const char*)NULL, 0x0000, 0x0000, 0x00, 0x00, 0, INIT_NOTHING}
@@ -96,14 +94,19 @@ const char *usbEnumDeviceNames( unsigned int *idx) {
 
 /* List vendor ID and product ID of USB devices.
  */
-void usbList()
+void usbList( void)
 {
     int rc;
     int i;
     ssize_t numDev;
     libusb_device **devList;
     libusb_device *dev;
+    struct libusb_device_handle *devH;
     struct libusb_device_descriptor desc;
+
+#define DESCRIPTOR_MAX_LEN  80
+    unsigned char manufacturer[DESCRIPTOR_MAX_LEN];
+    unsigned char product[DESCRIPTOR_MAX_LEN];
 
     rc = libusb_init( NULL);
     if( rc < 0) {
@@ -124,9 +127,34 @@ void usbList()
             if( rc < 0) {
                 printfLog( "Error getting device descriptor: %s\n",
                            libusb_error_name( rc));
+                continue;
             }
 
-            printf("VId=%04x PId=%04x\n", desc.idVendor, desc.idProduct);
+            manufacturer[0] = '\0';
+            product[0] = '\0';
+
+            rc = libusb_open( dev, &devH);
+            if( rc == 0) {
+                libusb_get_string_descriptor_ascii(
+                    devH,
+                    desc.iManufacturer,
+                    manufacturer, DESCRIPTOR_MAX_LEN);
+
+                libusb_get_string_descriptor_ascii(
+                    devH,
+                    desc.iProduct,
+                    product, DESCRIPTOR_MAX_LEN);
+
+                libusb_close( devH);
+
+            } else { /* Most likely missing privileges */
+                strncpy( (char*)manufacturer, (char*)"- no access -",
+                         DESCRIPTOR_MAX_LEN);
+            }
+
+            printf( "VId=%04x PId=%04x [%s] %s\n",
+                    desc.idVendor, desc.idProduct,
+                    manufacturer, product);
 
             libusb_unref_device( dev);
         }
@@ -185,6 +213,7 @@ usbDevice *usbOpen( const char *devName)
             if( rc < 0) {
                 printfLog( "Error getting device descriptor: %s\n",
                            libusb_error_name( rc));
+                continue;
             }
 
             if(    desc.idVendor  == devInfo->vendorId
@@ -262,6 +291,15 @@ usbDevice *usbOpen( const char *devName)
         usbClose( NULL);
         return NULL;
 
+    case INIT_ATMEGA32U4:
+        printfDebug( "Running ATMEGA32U4 initialization code.\n");
+        if( initATMEGA32U4( devH) != RC_OK) {
+            printfLog( "Failed to run init code for ATMEGA32U4.\n");
+            usbClose( NULL);
+            return NULL;
+        }
+        break;
+        
     default:
         break;
     }

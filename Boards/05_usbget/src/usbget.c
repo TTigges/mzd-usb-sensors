@@ -76,9 +76,9 @@
  *
  */
 
-#include <support.h>
-#include <usb.h>
-#include <protocol.h>
+#include "support.h"
+#include "usb.h"
+#include "protocol.h"
 
 #include <unistd.h>
 
@@ -328,6 +328,7 @@ static void usage()
     printf("     -v                         Enable debug output\n");
     printf("     -?                         Print usage\n\n");
     printf("   Commands:\n");
+    printf("     -u                         List USB devices\n");
     printf("     -i request                 Query infos\n");
     printf("     -i ALL                     Query all infos\n");
     printf("     -l                         List supported actions\n");
@@ -434,7 +435,7 @@ static void runCommand( ProtocolChar cmd,
             else if( cmd == QUERY_ACTION) {
 
                 if( fp == NULL) {
-                    fp = openFileForWrite( action, OUTPUT_EXT, "w");
+                    fp = openFile( action, OUTPUT_EXT, "w");
                 }
 
                 if (fp != NULL) {

@@ -5,7 +5,10 @@
  *
  */
 
-#include <support.h>
+#ifndef _USBGET_FTDI_H
+#define _USBGET_FTDI_H
+
+#include "support.h"
 #include <libusb.h>
 
 /* FTDI specific libusb initialization code.
@@ -16,3 +19,5 @@
  *          RC_ERROR on any error
  */
 returnCode initFTDI( struct libusb_device_handle *devH);
+
+#endif

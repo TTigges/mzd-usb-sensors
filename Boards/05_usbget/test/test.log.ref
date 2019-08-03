@@ -16,6 +16,7 @@ usbget 0.1.1
      -?                         Print usage
 
    Commands:
+     -u                         List USB devices
      -i request                 Query infos
      -i ALL                     Query all infos
      -l                         List supported actions

@@ -3,9 +3,13 @@
  *
  * Generic defines and utilities.
  *
+ * File History
+ * ============
+ *   wolfix      24-Jul-2019  Code cleanup.
+ *
  */
 
-#include <support.h>
+#include "support.h"
 
 #include <unistd.h>
 #include <stdarg.h>
@@ -23,6 +27,8 @@ static int lockFile = -1;
 
 
 static void strcatToLower( char *target, const char *source);
+static void copyFile( FILE *source, FILE *target);
+static long fileSize( FILE *file);
 
 
 /* ******************* export functions ********************* */
@@ -32,38 +38,29 @@ static void strcatToLower( char *target, const char *source);
  */
 void printfLog( const char *format, ...)
 {
-    long fileSize;
     FILE *backupLogFile;
-    char buf;
 #define TS_MAX_LEN 20
     char ts[TS_MAX_LEN];
 
     if( logFile == NULL) {
-        logFile = openFileForWrite( LOG_FILE_NAME, LOG_EXT, "a+");
+        logFile = openFile( LOG_FILE_NAME, LOG_EXT, "a+");
     }
 
-    if( logFile != NULL) {
-        fseek(logFile, 0L, SEEK_END);
-        fileSize = ftell( logFile);
+    if(    (logFile != NULL)
+        && (fileSize(logFile) >= LOG_FILE_MAX_SIZE) )
+    {
+        backupLogFile = openFile( LOG_FILE_NAME, LOG_BACKUP_EXT, "w");
 
-        if( fileSize >= LOG_FILE_MAX_SIZE) {
-            backupLogFile =
-                openFileForWrite( LOG_FILE_NAME, LOG_BACKUP_EXT, "w");
-
-            if( backupLogFile != NULL) {
-                /* Copy logfile to backup */
-                fseek(logFile, 0L, SEEK_SET);
-                while( fread( &buf,(size_t)1,(size_t)1,logFile) == 1) {
-                    fwrite( &buf,(size_t)1,(size_t)1,backupLogFile);
-                }
-
-                fclose( backupLogFile);
-            }
-
-            /* Reopen original log file (truncate) */
-            fclose( logFile);
-            logFile = openFileForWrite( LOG_FILE_NAME, LOG_EXT, "w");
+        if( backupLogFile != NULL) {
+            copyFile( logFile, backupLogFile);
+            fclose( backupLogFile);
         }
+
+        /* Reopen original log file (truncate) */
+        fclose( logFile);
+        logFile = openFile( LOG_FILE_NAME, LOG_EXT, "w");
+        fclose( logFile);
+        logFile = openFile( LOG_FILE_NAME, LOG_EXT, "a+");
     }
 
     if( logFile != NULL) {
@@ -83,6 +80,7 @@ void printfLog( const char *format, ...)
     va_end( vargs);
 }
 
+
 /* If debug output is enabled print to debug stream.
  * Debug output is enabled by setDebugStream() with a non-null argument.
  */
@@ -91,9 +89,7 @@ void printfDebug( const char *format, ...)
     if( debug != NULL) {
         va_list vargs;
         va_start( vargs, format);
-
         vfprintf( debug, format, vargs);
-
         va_end( vargs);
     }
 }
@@ -110,7 +106,7 @@ void setDebugStream( FILE *stream)
  * Note: The returned value may have no relation to wall clock time
  * if we are running on a micro controller.
  */
-long timeMSec()
+long timeMSec( void)
 {
     struct timeval tp;
     gettimeofday(&tp, NULL);
@@ -138,9 +134,7 @@ void timestamp( char *ts, size_t len)
  * If the resulting path is to long or there was an error during
  * file open this function returns NULL.
  */
-FILE *openFileForWrite( const char *name,
-                        const char *ext,
-                        const char *mode)
+FILE *openFile( const char *name, const char *ext, const char *mode)
 {
     FILE *fp;
     char filePath[MAX_FILE_PATH_LEN];
@@ -154,7 +148,7 @@ FILE *openFileForWrite( const char *name,
         strcat( filePath, ext);
     }
     else {
-        fprintf( stderr, "openFileForWrite(): File path to long.\n");
+        fprintf( stderr, "openFile(): File path to long.\n");
         return NULL;
     }
 
@@ -170,7 +164,7 @@ FILE *openFileForWrite( const char *name,
 /* Acquire an exclusive lock on the lock file.
  * The lock file is created in OUTPUT_PATH.
  */
-returnCode acquireLock()
+returnCode acquireLock( void)
 {
     char filePath[MAX_FILE_PATH_LEN];
     int rcFlock;
@@ -205,7 +199,7 @@ returnCode acquireLock()
              * If that fails for LOCK_SLEEP_LIMIT
              * we raise an error and quit.
              */
-            if( rcFlock && errno == EWOULDBLOCK) {
+            if( rcFlock && (errno == EWOULDBLOCK) ) {
                 usleep( LOCK_SLEEP_MSEC * USEC_TO_MSEC);
                 sleepMsec += LOCK_SLEEP_MSEC;
                 if( sleepMsec >= LOCK_LIMIT_MSEC) {
@@ -229,7 +223,7 @@ returnCode acquireLock()
 
 /* Release previously acquired lock.
  */
-void releaseLock()
+void releaseLock( void)
 {
     if( lockFile >= 0) {
         flock( lockFile, LOCK_UN);
@@ -252,4 +246,38 @@ static void strcatToLower( char *target, const char *source)
         source++;
     }
     *target = '\0';
+}
+
+/* Returns file size or 0 on error.
+ */
+static long fileSize( FILE *file)
+{
+    long sz = 0;
+
+    if( file) {
+        fseek( file, 0L, SEEK_END);
+        sz = ftell( file);
+        if( sz < 0) { sz = 0; }
+    }
+
+    return sz;
+}
+
+/* Copy source to target.
+ * Note that any errors are silently dropped.
+ */
+static void copyFile( FILE *source, FILE *target)
+{
+#define COPY_BUFFER_LEN ((size_t)64)
+    char copyBuffer[COPY_BUFFER_LEN];
+    size_t sz;
+
+    if( source && target) {
+        fseek(source, 0L, SEEK_SET);
+        while( (sz=fread(&copyBuffer,(size_t)1,COPY_BUFFER_LEN,source))
+               > 0)
+        {
+            fwrite( &copyBuffer, (size_t)1, sz, target);
+        }
+    }
 }
