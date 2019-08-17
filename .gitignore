@@ -7,3 +7,7 @@ Boards/05_usbget/cmu/usbget
 Boards/05_usbget/local/*.o
 Boards/05_usbget/local/usbget
 Boards/05_usbget/test/test.log
+Boards/05_usbget/src/*.o
+Boards/05_usbget/src/usbget
+Boards/05_usbget/src/adlint/
+Boards/05_usbget/src/Makefile

@@ -3,27 +3,66 @@
  *
  * FTDI USB => serial converter specific initialization.
  *
+ * File History
+ * ============
+ *   wolfix      24-Jul-2019  Disable flow control.
+ *
  */
 
-#include <ftdi.h>
+#include "ftdi.h"
 
-#define TRANSMIT_TIMEOUT_MSEC  5000
+#define TRANSMIT_TIMEOUT_MSEC  ((unsigned int)5000)
 
-#define FTDI_DEVICE_OUT_REQTYPE (LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | LIBUSB_ENDPOINT_OUT)
-#define FTDI_DEVICE_IN_REQTYPE (LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | LIBUSB_ENDPOINT_IN)
+/* USB Request type: uint8_t
+ *
+ * 0000 0000
+ * +---------- Direction
+ *               0 Host to device    LIBUSB_ENDPOINT_OUT
+ *               1 Device to Host    LIBUSB_ENDPOINT_IN
+ *  ++-------- Type
+ *               00 Standard         LIBUSB_REQUEST_TYPE_STANDARD
+ *               01 Class            LIBUSB_REQUEST_TYPE_CLASS
+ *               10 Vendor           LIBUSB_REQUEST_TYPE_VENDOR
+ *               11 Reserved         LIBUSB_REQUEST_TYPE_RESERVED
+ *    + ++++-- Recipient
+ *               00000 Device        LIBUSB_RECIPIENT_DEVICE
+ *               00001 Interface     LIBUSB_RECIPIENT_INTERFACE
+ *               00010 Endpoint      LIBUSB_RECIPIENT_ENDPOINT
+ *               00011 Other         LIBUSB_RECIPIENT_OTHER
+ *                     Reserved
+ *
+ */
+
+/*
+ *  LIBUSB_ENDPOINT_OUT          0
+ *  LIBUSB_REQUEST_TYPE_CLASS     01
+ *  LIBUSB_RECIPIENT_INTERFACE      0 0001
+ *  --------------------------------------
+ *                               0010 0001 = 0x21
+ */
+#define FTDI_INTERFACE_OUT_REQTYPE (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS  | LIBUSB_RECIPIENT_INTERFACE)
+
+/*
+ *  LIBUSB_ENDPOINT_OUT          0
+ *  LIBUSB_REQUEST_TYPE_VENDOR    10
+ *  LIBUSB_RECIPIENT_DEVICE         0 0000
+ *  --------------------------------------
+ *                               0100 0000 = 0x40
+ */
+#define FTDI_DEVICE_OUT_REQTYPE (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE)
 
 /* Request types */
-#define SIO_RESET          0
-#define SIO_MODEM_CTRL     1
-#define SIO_SET_FLOW_CTRL  2
-#define SIO_SET_BAUDRATE   3
-#define SIO_SET_DATA       4
+#define SIO_RESET          ((uint8_t)0)
+#define SIO_MODEM_CTRL     ((uint8_t)1)
+#define SIO_SET_FLOW_CTRL  ((uint8_t)2)
+#define SIO_SET_BAUDRATE   ((uint8_t)3)
+#define SIO_SET_DATA       ((uint8_t)4)
 
-#define SIO_SET_EVENT_CHAR 6
-#define SIO_SET_ERROR_CHAR 7
+#define SIO_SET_EVENT_CHAR ((uint8_t)6)
+#define SIO_SET_ERROR_CHAR ((uint8_t)7)
 
 /* Reset request */
-#define SIO_RESET_SIO 0
+#define SIO_RESET_SIO      ((uint16_t)0)
 
 /* Flow control request */
 #define SIO_DISABLE_FLOW_CTRL 0x0
@@ -41,21 +80,24 @@
  */
 returnCode initFTDI( struct libusb_device_handle *devH)
 {
-    unsigned short value = 0;
-    unsigned short index = 1;
+    int rc;
+
+    uint16_t value = (uint16_t)0;
+    uint16_t index = (uint16_t)1;
 
 
     /* Reset FTDI device.
      */
-    if (libusb_control_transfer(devH,
+    if( (rc = libusb_control_transfer(devH,
                                 FTDI_DEVICE_OUT_REQTYPE,
                                 SIO_RESET,
                                 SIO_RESET_SIO,
                                 index,
                                 NULL,
-                                0,
-                                TRANSMIT_TIMEOUT_MSEC) < 0) {
-        printfLog( "Failed to reset USB.");
+                                (uint16_t)0,
+                                TRANSMIT_TIMEOUT_MSEC)) < 0) {
+        printfLog( "Failed to reset USB: %s\n",
+                   libusb_error_name(rc));
         return RC_ERROR;
     }
 
@@ -78,18 +120,19 @@ returnCode initFTDI( struct libusb_device_handle *devH)
      * Break Off  00 0000 0000 0000
      *       On   10 0000 0000 0000          0x2000
      */
-    value = 0x0008;
-    index = 1;
+    value = (uint16_t)0x0008;
+    index = (uint16_t)1;
 
-    if (libusb_control_transfer(devH,
+    if( (rc = libusb_control_transfer(devH,
                                 FTDI_DEVICE_OUT_REQTYPE,
                                 SIO_SET_DATA,
                                 value,
                                 index,
                                 NULL,
-                                0,
-                                TRANSMIT_TIMEOUT_MSEC) < 0) {
-        printfLog( "Failed to set line properties.");
+                                (uint16_t)0,
+                                TRANSMIT_TIMEOUT_MSEC)) < 0) {
+        printfLog( "Failed to set line properties: %s\n",
+                   libusb_error_name(rc));
         return RC_ERROR;
     }
 
@@ -108,55 +151,58 @@ returnCode initFTDI( struct libusb_device_handle *devH)
      *    value = 0x1a;
      *    index = 0x00;
      */
-    value = 0x9c;
-    index = 0x80;
+    value = (uint16_t)0x9c;
+    index = (uint16_t)0x80;
 
-    if (libusb_control_transfer(devH,
+    if( (rc = libusb_control_transfer(devH,
                                 FTDI_DEVICE_OUT_REQTYPE,
                                 SIO_SET_BAUDRATE,
                                 value,
                                 index,
                                 NULL,
-                                0,
-                                TRANSMIT_TIMEOUT_MSEC) < 0) {
-        printfLog( "Failed to set baudrate.");
+                                (uint16_t)0,
+                                TRANSMIT_TIMEOUT_MSEC) < 0)) {
+        printfLog( "Failed to set baudrate: %s\n",
+                   libusb_error_name(rc));
         return RC_ERROR;
     }
 
 
     /* Flow control
      */
-    value = 0;
-    index = 1;
+    value = (uint16_t)0;
+    index = (uint16_t)1;
 
-    unsigned short flowctrl = SIO_XON_XOFF_HS;
+    unsigned short flowctrl = SIO_DISABLE_FLOW_CTRL;
 
-    if (libusb_control_transfer(devH,
+    if( (rc = libusb_control_transfer(devH,
                                 FTDI_DEVICE_OUT_REQTYPE,
                                 SIO_SET_FLOW_CTRL,
                                 0,
                                 flowctrl | index,
                                 NULL,
-                                0,
-                                TRANSMIT_TIMEOUT_MSEC) < 0) {
-        printfLog( "Failed to set flow control.");
+                                (uint16_t)0,
+                                TRANSMIT_TIMEOUT_MSEC) < 0)) {
+        printfLog( "Failed to set flow control: %s\n",
+                   libusb_error_name(rc));
         return RC_ERROR;
     }
 
 
     /* Disable event character
      */
-    value = 0;
+    value = (uint16_t)0;
 
-    if (libusb_control_transfer(devH,
+    if( (rc = libusb_control_transfer(devH,
                                 FTDI_DEVICE_OUT_REQTYPE,
                                 SIO_SET_EVENT_CHAR,
                                 value,
                                 index,
                                 NULL,
-                                0,
-                                TRANSMIT_TIMEOUT_MSEC) < 0) {
-        printfLog( "Failed to disable event char.");
+                                (uint16_t)0,
+                                TRANSMIT_TIMEOUT_MSEC)) < 0) {
+        printfLog( "Failed to disable event char: %s\n",
+                   libusb_error_name(rc));
         return RC_ERROR;
     }
 

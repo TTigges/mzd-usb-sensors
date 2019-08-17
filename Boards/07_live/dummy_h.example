@@ -1,0 +1,37 @@
+/*
+ * dummy.h
+ * 
+ * This is only a stub for new actions.
+ * Copy the file to a reasonable name and fill in the TODOs.
+ * 
+ */
+
+/* TODO: Replace "dummy" with the actual name of the action everywhere. */
+#ifdef DUMMY_SUPPORT
+
+typedef struct dummy_config_t {
+  /* TODO: Add config data that should be stored in the EEPROM here
+   *       or remove the config structure if you don't need it.
+   */
+
+   
+  checksum_t checksum;
+} dummy_config_t;
+
+dummy_config_t dummyConfig;
+
+class Dummy : public Action {
+
+  private:
+    unsigned int configLocation;
+
+  public:
+    size_t setup(unsigned int eepromLocation);
+    const char *getName();
+    void getData();
+    void sendData();
+    void sendConfig();
+    void setConfig();
+};
+
+#endif

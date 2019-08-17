@@ -1,6 +1,6 @@
 --- usage ---
 
-usbget 0.1.0
+usbget 0.1.1
 
  usage: usbget [options] [command ... ] 
 
@@ -11,10 +11,12 @@ usbget 0.1.0
           arduino_pro
           arduino_nano
           arduino_nano_clone
+          arduino_micro
      -v                         Enable debug output
      -?                         Print usage
 
    Commands:
+     -u                         List USB devices
      -i request                 Query infos
      -i ALL                     Query all infos
      -l                         List supported actions
@@ -25,50 +27,60 @@ usbget 0.1.0
    In case no command is specified all supported actions are queried.
 
 --- arduino_nano list ---
-Error finding USB device: vendor=0x403 product=0x6001
+No suitable USB device found.
 --- arduino_pro list ---
-Error finding USB device: vendor=0x403 product=0x6001
+No suitable USB device found.
 --- redbear_duo list ---
 TPMS
 OIL
+RGB
 WS2801
---- redbear_duo info ---
+--- info ---
 VERSION=*.*.*
---- redbear_duo config ---
+SIMULATE=false
+--- config ---
 FL=80EACA100326
 FR=81EACA2002C0
 RL=82EACA300633
 RR=83EACA400619
-csum=1696
---- redbear_duo query ---
+LEDS=*
+R=*
+G=*
+B=*
+--- query ---
 FL: *.* *.* FR: *.* *.* RL: *.* *.* RR: *.* *.*
 oiltemp: *.* oilpress: *.*
---- redbear_duo query multiple ---
+--- query multiple ---
 FL: *.* *.* FR: *.* *.* RL: *.* *.* RR: *.* *.*
 oiltemp: *.* oilpress: *.*
---- redbear_duo set ---
---- redbear_duo set max parameters ---
-Error from USB device: Unknown function.
+--- set ---
+--- set max parameters ---
+Error from USB device: Unknown action request.
 --- negative tests ---
 --- wrong device ---
 No device info for device named: arduino_bla
 --- wrong action ---
-Error from USB device: Unknown function.
+Error from USB device: Unknown action request.
+--- wrong info request ---
+Error from USB device: Unknown info request.
 --- to many parameters ---
 To many parameters: 11
 --- long device name ---
 No device info for device named: redbear_duo_redbear
 --- long action name ---
-Error from USB device: Unknown function.
+Error from USB device: Unknown action request.
 Initializing libusb.
-Opening USB device. [vendor=0x2b04,product=0xc058]
+Searching for USB device: [vendor=0x2b04,product=0xc058]
+Opening USB device.
 Claiming USB interface.
 USB interface(s) claimed.
 USB device opened.
 DrainInput 0 chars rc=-7: 
 queryAction()
-USB Send: QBLABLA7890BLABLA789
-USB Send: .
-usbGetChar 20 chars rc=0: 47 85 110 107 110 111 119 110 32 102 117 110 99 116 105 111 110 46 13 10 
-USB Recv: cmd=/ 'Unknown function.'
+USB Send (21) : QBLABLA7890BLABLA789
+USB Send (2) : .
+usbGetChar 26 chars rc=0: 47 85 110 107 110 111 119 110 32 97 99 116 105 111 110 32 114 101 113 117 101 115 116 46 13 10 
+USB Recv: cmd=/ 'Unknown action request.'
 USB device closed.
+--- long parameter key ---
+Error from USB device: Parameter key to long.

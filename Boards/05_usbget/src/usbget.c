@@ -20,6 +20,7 @@
  *     -?                         Print usage
  *
  *   Commands:
+ *     -u                         List USB devices
  *     -i request                 Query infos
  *     -i ALL                     Query all infos
  *     -l                         List supported actions
@@ -63,6 +64,7 @@
  *
  * File History
  * ============
+ *   wolfix      21-Jul-2019  USB device open code
  *   wolfix      04-Jul-2019  Code refactoring
  *   wolfix      25-Jun-2019  Fix getopt hang (signed/unsiged mismatch)
  *                            3 sec command timeout.
@@ -74,14 +76,14 @@
  *
  */
 
-#include <support.h>
-#include <usb.h>
-#include <protocol.h>
+#include "support.h"
+#include "usb.h"
+#include "protocol.h"
 
 #include <unistd.h>
 
 
-static const char* VERSION = "0.1.0";
+static const char* VERSION = "0.1.1";
 
 
 #define MAX_DEVICENAME_LEN  20
@@ -223,7 +225,7 @@ static void parseOptions( int argc, char **argv)
 
     deviceName[0] = '\0';
 
-#define ALL_GETOPTS "lc:i:q:s:p:d:v?"
+#define ALL_GETOPTS "vd:ulc:i:q:s:p:?"
 
     while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
         if( (char)opt ==  'v') {
@@ -231,6 +233,10 @@ static void parseOptions( int argc, char **argv)
 
         } else if( (char)opt == 'd') {
             SAFE_STRNCPY( deviceName, optarg, MAX_DEVICENAME_LEN);
+
+        } else if( (char)opt == 'u') {
+            usbList();
+            exit(0);
 
         } else if( (char)opt == '?') {
             usage();
@@ -322,6 +328,7 @@ static void usage()
     printf("     -v                         Enable debug output\n");
     printf("     -?                         Print usage\n\n");
     printf("   Commands:\n");
+    printf("     -u                         List USB devices\n");
     printf("     -i request                 Query infos\n");
     printf("     -i ALL                     Query all infos\n");
     printf("     -l                         List supported actions\n");
@@ -428,7 +435,7 @@ static void runCommand( ProtocolChar cmd,
             else if( cmd == QUERY_ACTION) {
 
                 if( fp == NULL) {
-                    fp = openFileForWrite( action, OUTPUT_EXT);
+                    fp = openFile( action, OUTPUT_EXT, "w");
                 }
 
                 if (fp != NULL) {

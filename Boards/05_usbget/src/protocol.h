@@ -86,7 +86,12 @@
  *
  */
 
-#include <usb.h>
+#ifndef _USBGET_PROTOCOL_H
+#define _USBGET_PROTOCOL_H
+
+
+#include "support.h"
+#include "usb.h"
 
 
 /* Protocol command characters */
@@ -102,13 +107,13 @@ typedef enum ProtocolChar {
     NACK_OR_ERROR       = '/'
 } ProtocolChar;
 
-#define TO_char( p) ((char)p)
-#define TO_ProtocolChar( c) ((ProtocolChar)c)
+#define TO_char( p) ((char)(p))
+#define TO_ProtocolChar( c) ((ProtocolChar)(c))
 
-#define isNoCommand( cmd) (cmd == NO_COMMAND)
-#define isEOT( cmd) (cmd == END_OF_TRANSMISSION)
-#define isMoreData( cmd) (cmd == MORE_DATA)
-#define isNACK( cmd) (cmd == NACK_OR_ERROR)
+#define isNoCommand( cmd) ((cmd) == NO_COMMAND)
+#define isEOT( cmd) ((cmd) == END_OF_TRANSMISSION)
+#define isMoreData( cmd) ((cmd) == MORE_DATA)
+#define isNACK( cmd) ((cmd) == NACK_OR_ERROR)
 
 
 /* Fetches a single line without command char from USB device.
@@ -139,3 +144,6 @@ returnCode sendError( usbDevice *device, const char *message);
 returnCode sendCommand( usbDevice *device,
                         ProtocolChar command,
                         const char *data);
+
+#endif
+
