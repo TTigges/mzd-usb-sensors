@@ -13,6 +13,7 @@
 #include "usb.h"
 #include "ftdi.h"
 #include "atmega32u4.h"
+#include "ch340.h"
 
 typedef struct deviceInfo_t {
     const char *name;
@@ -31,6 +32,7 @@ typedef struct deviceInfo_t {
 #define INIT_ATMEGA32U4    3
 
 static const deviceInfo_t device_info[] = {
+    /* Vid,     Pid,    Ein,  Eout, IFcount */
     {(const char*)"redbear_duo",
         0x2B04, 0xC058, 0x81, 0x01, 2, INIT_NOTHING},
     {(const char*)"arduino_pro",
@@ -38,7 +40,7 @@ static const deviceInfo_t device_info[] = {
     {(const char*)"arduino_nano",
         0x0403, 0x6001, 0x81, 0x02, 1, INIT_FTDI},
     {(const char*)"arduino_nano_clone",
-        0x1a86, 0x7523, 0x81, 0x02, 1, INIT_CH340},
+        0x1a86, 0x7523, 0x82, 0x02, 1, INIT_CH340},
     {(const char*)"arduino_micro",
         0x2341, 0x8037, 0x83, 0x02, 2, INIT_ATMEGA32U4},
 
@@ -59,6 +61,10 @@ struct usbDevice {
 
 
 static const deviceInfo_t *deviceInfoByName( const char *devName);
+
+static const deviceInfo_t *deviceInfoByVendorProduct(
+    uint16_t vendorId,
+    uint16_t productId);
 
 
 /* Enumerate all device names.
@@ -101,6 +107,7 @@ void usbList( void)
     ssize_t numDev;
     libusb_device **devList;
     libusb_device *dev;
+    const deviceInfo_t *devInfo;
     struct libusb_device_handle *devH;
     struct libusb_device_descriptor desc;
 
@@ -152,9 +159,14 @@ void usbList( void)
                          DESCRIPTOR_MAX_LEN);
             }
 
-            printf( "VId=%04x PId=%04x [%s] %s\n",
+            devInfo = deviceInfoByVendorProduct( desc.idVendor,
+                                                 desc.idProduct);
+
+            printf( "VId=%04x PId=%04x [%s] %s %s\n",
                     desc.idVendor, desc.idProduct,
-                    manufacturer, product);
+                    manufacturer,
+                    product,
+                    devInfo ? devInfo->name : "");
 
             libusb_unref_device( dev);
         }
@@ -168,7 +180,7 @@ void usbList( void)
 /* Open USB device by vendor and product id.
  * Returns NULL if the device was not found or we run into an error.
  */
-usbDevice *usbOpen( const char *devName)
+usbDevice *usbOpen( const char *devName, uint32_t bd)
 {
     int rc;
     int i;
@@ -278,7 +290,7 @@ usbDevice *usbOpen( const char *devName)
 
     case INIT_FTDI:
         printfDebug( "Running FTDI initialization code.\n");
-        if( initFTDI( devH) != RC_OK) {
+        if( initFTDI( devH, bd) != RC_OK) {
             printfLog( "Failed to run init code for FTDI.\n");
             usbClose( NULL);
             return NULL;
@@ -286,10 +298,13 @@ usbDevice *usbOpen( const char *devName)
         break;
 
     case INIT_CH340:
-
-        printfLog( "CH340 is not supported yet.\n");
-        usbClose( NULL);
-        return NULL;
+        printfDebug( "Running CH340 initialization code.\n");
+        if( initCH340( devH, bd) != RC_OK) {
+            printfLog( "Failed to run init code for CH340.\n");
+            usbClose( NULL);
+            return NULL;
+        }
+        break;
 
     case INIT_ATMEGA32U4:
         printfDebug( "Running ATMEGA32U4 initialization code.\n");
@@ -299,7 +314,7 @@ usbDevice *usbOpen( const char *devName)
             return NULL;
         }
         break;
-        
+
     default:
         break;
     }
@@ -521,6 +536,24 @@ static const deviceInfo_t *deviceInfoByName( const char *devName)
     device = &(device_info[0]);
     while( device->name != NULL) {
         if( strcmp( device->name, devName) == 0) {
+            return device;
+        }
+        device++;
+    }
+
+    return NULL;
+}
+
+static const deviceInfo_t *deviceInfoByVendorProduct(
+    uint16_t vendorId,
+    uint16_t productId)
+{
+    const deviceInfo_t *device;
+
+    device = &(device_info[0]);
+    while( device->name != NULL) {
+        if( device->vendorId == vendorId
+            && device->productId == productId) {
             return device;
         }
         device++;

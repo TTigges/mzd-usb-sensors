@@ -64,6 +64,7 @@
  *
  * File History
  * ============
+ *   wolfix      26-Jan-2020  (0.1.2) CH240 support
  *   wolfix      21-Jul-2019  USB device open code
  *   wolfix      04-Jul-2019  Code refactoring
  *   wolfix      25-Jun-2019  Fix getopt hang (signed/unsiged mismatch)
@@ -83,12 +84,15 @@
 #include <unistd.h>
 
 
-static const char* VERSION = "0.1.1";
+static const char* VERSION = "0.1.2";
 
 
 #define MAX_DEVICENAME_LEN  20
 static char deviceName[MAX_DEVICENAME_LEN];
 static usbDevice *device = NULL;
+
+/* Baud rate for Micros that are attached via FTDI or similar chip */
+#define USB_SPEED             ((uint32_t)19200)
 
 /* @TODO current limit of 10 actions */
 #define MAX_ACTIONS           10
@@ -157,7 +161,7 @@ int main( int argc, char **argv)
         exit(-1);
     }
 
-    device = usbOpen( deviceName);
+    device = usbOpen( deviceName, USB_SPEED);
     if( !device) {
         releaseLock();
         exit(-1);

@@ -139,15 +139,12 @@ void loop() {
   }
 }  
 
-void resetState()
-{
-  currentCommand = NO_COMMAND;
-  currentFunction[0] = '\0';
+/*** PUBLIC ***/
 
-  paramIdx = 0;
-  paramDataPtr = 0;
-}
-
+/*
+ * Called from action modules to fetch a numeric parameter passed in
+ * by usbget -d <device> -s <module> -p "<key>=<param>"
+ */
 int getIntParam( const char *key, int missingValue) {
 
   for( int i=0; i<paramIdx; i++) {
@@ -159,6 +156,10 @@ int getIntParam( const char *key, int missingValue) {
   return missingValue;
 }
 
+/*
+ * Called from action modules to fetch a string parameter passed in
+ * by usbget -d <device> -s <module> -p "<key>=<param>"
+ */
 const char *getStringParam( const char *key) {
 
   for( int i=0; i<paramIdx; i++) {
@@ -170,7 +171,9 @@ const char *getStringParam( const char *key) {
   return NULL;
 }
 
-void setParam( const char *key, const char *value, int valLen) {
+/*** PRIVATE ***/
+
+static void setParam( const char *key, const char *value, int valLen) {
 
   size_t keyLen = strlen(key);
   
@@ -197,7 +200,16 @@ void setParam( const char *key, const char *value, int valLen) {
   paramIdx++;
 }
 
-void handleMoreData()
+static void resetState()
+{
+  currentCommand = NO_COMMAND;
+  currentFunction[0] = '\0';
+
+  paramIdx = 0;
+  paramDataPtr = 0;
+}
+
+static void handleMoreData()
 {
   const char *moreData;
   char ch;
@@ -261,7 +273,7 @@ void handleMoreData()
 /* We got EOT.
  * That means all transfer of data is done and we can start executing the function.
  */
-void handleEOT()
+static void handleEOT()
 {
   switch( currentCommand) {
 
@@ -292,13 +304,13 @@ void handleEOT()
   resetState();
 }
 
-void handleError()
+static void handleError()
 {
   /* Nothing to do for now, just reset everything. */
   resetState();
 }
 
-int mapToInfo( char info[])
+static int mapToInfo( char info[])
 {
   int infoId = -1;
 
@@ -312,7 +324,7 @@ int mapToInfo( char info[])
   return infoId;
 }
 
-void infoCommand()
+static void infoCommand()
 {
   switch( mapToInfo( currentFunction)) {
     case ALL_INFO:

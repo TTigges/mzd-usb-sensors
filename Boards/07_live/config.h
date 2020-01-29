@@ -8,9 +8,9 @@
 
 /* Select ONLY ONE of... */
 
-#define REDBEAR_DUO
+//#define REDBEAR_DUO
 //#define ARDUINO_PRO
-//#define ARDUINO_NANO
+#define ARDUINO_NANO
 
 /* END PLATFORM SELECTION */
 

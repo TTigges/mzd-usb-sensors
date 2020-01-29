@@ -20,6 +20,16 @@
 
 #ifdef TPMS_433_SUPPORT
 
+/*
+ * This function is called once when the MC boots up.
+ * It reads configuration data from EEPROM and returns the size of the data read.
+ * 
+ * It should also perform any one time initialization of the sensor code.
+ * 
+ * IT IS IMPORTANT TO RETURN THE CORRECT SIZE OF THE CONFIGURATION DATA STORED 
+ * IN EEPROM AS THE VALUE IS USED TO COMPUTE THE EEPROM START LOCATION OF THE 
+ * NEXT MODULE!
+ */
 size_t Tpms433::setup(unsigned int eepromLocation)
 {
   size_t sizeOfConfig = sizeof(tpms433Config);
@@ -30,7 +40,9 @@ size_t Tpms433::setup(unsigned int eepromLocation)
   EEPROM.get( eepromLocation, tpms433Config);
 
   if( tpms433Config.checksum != computeChecksum( &tpms433Config, sizeOfConfig)) {
-    /* TODO: Set default values in case the checksum is wrong and there is no valid date in the EEPROM */
+    
+    /* TODO: Set default values in case the checksum is wrong and there is no valid data in the EEPROM */
+    
     strcpy( tpms433Config.smac[FRONT_LEFT],  "000000000000");
     strcpy( tpms433Config.smac[FRONT_RIGHT], "111111111111");
     strcpy( tpms433Config.smac[REAR_LEFT],   "222222222222");
@@ -43,15 +55,29 @@ size_t Tpms433::setup(unsigned int eepromLocation)
 
   /* TODO: Initialilzation code goes here */
 
-  
   return (size_t)sizeOfConfig;
 }
 
+/*
+ * This function returns the name of this action module.
+ * The name is used to identify this module for requests sent by the CMU.
+ * 
+ * usbget -d <device> -l
+ * usbget -d <devcie> -q TMPS
+ * usbget -d <devcie> -c TPMS
+ * usbget -d <devcie> -s TPMS -p <param1> -p <param2> ...
+ * 
+ */
 const char *Tpms433::getName()
 {
   return "TPMS";
 }
 
+/*
+ * This function is called before sendData() is called in response to a CMU query.
+ * 
+ * It is responsible for collecting and/or preprocessing TPMS data from the sensors.
+ */
 void Tpms433::getData()
 {
   if( actionSimulate)
@@ -73,9 +99,18 @@ void Tpms433::getData()
   else 
   {
     /* TODO: Real implementation goes here */
+    
+    /* Use configuration data (sensor IDs) to filter sampled data */
+    
   }
 }
 
+/*
+ * This function is called to send TPMS data to the CMU.
+ * 
+ * The CMU executes: usbget -d <device> -q TPMS
+ * which causes this function to be called.
+ */
 void Tpms433::sendData()
 {
   String data;
@@ -89,6 +124,13 @@ void Tpms433::sendData()
   sendMoreData( data);
 }
 
+/*
+ * This function is called to send configuration values to the CMU.
+ * In our case we are sending the sensor IDs for all 4 tires.
+ * 
+ * The CMU executes: usbget -d <device> -c TPMS
+ * which causes this function be be called.
+ */
 void Tpms433::sendConfig()
 {
   sendMoreData( "FL="+String(tpms433Config.smac[FRONT_LEFT]));
@@ -97,18 +139,48 @@ void Tpms433::sendConfig()
   sendMoreData( "RR="+String(tpms433Config.smac[REAR_RIGHT]));
 }
 
+/*
+ * This function is called to set configuration values for this action.
+ * The configuration is stored in EEPROM and survives a reboot.
+ * 
+ * The CMU executes usbget -d <device> -s TPMS -p "FL=xxxx" -p "FR=xxxx" -p "RL=xxxx" -p "RR=xxxx"
+ */
 void Tpms433::setConfig()
 {
+  boolean configHasChanged = false;
+  
   /* TODO: Get new config data */
-//  config_data = getIntParam( /* some config option key */, /* default value */ );
+  
+  const char *config_FL = getStringParam( "FL" );
+  const char *config_FR = getStringParam( "FR" );
+  const char *config_RL = getStringParam( "RL" );
+  const char *config_RR = getStringParam( "RR" );
 
-//  if( /* TODO configuration has changed  */ ) {
+  if( config_FL != NULL) {
+      /* TODO: set config data here */
+      configHasChanged = true;
+  }
 
-    /* TODO: set config data here */
-    
-//    tpms433Config.checksum = computeChecksum( &tpms433Config, sizeof(tpms433Config));
-//    EEPROM.put( configLocation, tpms433Config);
-//  }  
+  if( config_FL != NULL) {
+      /* TODO: set config data here */
+      configHasChanged = true;
+  }
+
+  if( config_FL != NULL) {
+      /* TODO: set config data here */  
+      configHasChanged = true;
+  }
+
+  if( config_FL != NULL) {
+      /* TODO: set config data here */  
+      configHasChanged = true;
+  }
+
+  if( configHasChanged ) {
+
+      tpms433Config.checksum = computeChecksum( &tpms433Config, sizeof(tpms433Config));
+      EEPROM.put( configLocation, tpms433Config);
+  }  
 }
 
 #endif

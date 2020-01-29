@@ -50,7 +50,7 @@ void usbList( void);
 /* Open USB device by vendor and product id.
  * Returns NULL if the device was not found or we run into an error.
  */
-usbDevice* usbOpen( const char *devName);
+usbDevice* usbOpen( const char *devName, uint32_t bd);
 
 /* Release all interfaces and close USB port.
  *

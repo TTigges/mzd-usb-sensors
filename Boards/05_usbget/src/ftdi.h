@@ -18,6 +18,6 @@
  * Returns: RC_OK on success
  *          RC_ERROR on any error
  */
-returnCode initFTDI( struct libusb_device_handle *devH);
+returnCode initFTDI( struct libusb_device_handle *devH, uint32_t bd);
 
 #endif

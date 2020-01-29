@@ -78,13 +78,14 @@
  * Returns: RC_OK on success
  *          RC_ERROR on any error
  */
-returnCode initFTDI( struct libusb_device_handle *devH)
+returnCode initFTDI( struct libusb_device_handle *devH, uint32_t bd)
 {
     int rc;
 
     uint16_t value = (uint16_t)0;
     uint16_t index = (uint16_t)1;
 
+    printfDebug( "FTDI: opening with %d baud\n", bd);
 
     /* Reset FTDI device.
      */
@@ -151,8 +152,22 @@ returnCode initFTDI( struct libusb_device_handle *devH)
      *    value = 0x1a;
      *    index = 0x00;
      */
-    value = (uint16_t)0x9c;
-    index = (uint16_t)0x80;
+    if( (bd / 100) == 96) {
+        value = (uint16_t)0x38;
+        index = (uint16_t)0x41;
+
+    } else if( (bd / 100) == 192) {
+        value = (uint16_t)0x9c;
+        index = (uint16_t)0x80;
+        
+    } else if( (bd / 1000) == 115) {
+        value = (uint16_t)0x1a;
+        index = (uint16_t)0x00;
+        
+    } else {
+        printfLog( "Unknown baudrate: Use 9600,19200,115200\n");
+        return RC_ERROR;
+    }
 
     if( (rc = libusb_control_transfer(devH,
                                 FTDI_DEVICE_OUT_REQTYPE,

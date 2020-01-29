@@ -14,14 +14,27 @@
 #define REAR_LEFT   2
 #define REAR_RIGHT  3
 
+/*
+ * Configuration structure stored in EEPROM.
+ * It holds the sensor IDs for all 4 tires.
+ */
 typedef struct tpms433_config_t {
-  /* TODO: not sure what we need here */
+  
+  /* TODO: Adjust length and data type */
   char smac[TPMS_433_NUM_SENSORS][16];
+  
   checksum_t checksum;
+  
 } tpms433_config_t;
 
+/*
+ * This modules configuration data.
+ */
 tpms433_config_t tpms433Config;
 
+/*
+ * 
+ */
 class Tpms433 : public Action {
 
   private:
