@@ -36,3 +36,50 @@ const char *errorMsg[] = {
 /* Checksum type to checksum EEPROM configuration data.
  */
 typedef uint16_t checksum_t;
+
+
+/************** STATISTICS *********************/
+
+typedef struct statistics_t {
+  unsigned long cs_interrupts;
+  unsigned long data_interrupts;
+  unsigned long carrier_detected;
+  unsigned long data_available;
+  unsigned int carrier_len;
+  unsigned int max_timings;
+  unsigned int preamble_found;
+  unsigned int checksum_ok;
+  unsigned int checksum_fails;
+} statistics_t;
+
+static volatile statistics_t statistics;
+
+/* Note: dump happens unlatched. 
+ * Wrong data may be printed (sometimes).
+ */
+void dump_statistics()
+{
+  Serial.print(F("+cs interrupts   : "));
+  Serial.println(statistics.cs_interrupts);
+  Serial.print(F("+data interrupts : "));
+  Serial.println(statistics.data_interrupts);
+  Serial.print(F("+longest carr. us: "));
+  Serial.println(statistics.carrier_len);  
+  Serial.print(F("+carrier detected: "));
+  Serial.println(statistics.carrier_detected);
+  Serial.print(F("+data available  : "));
+  Serial.println(statistics.data_available);
+  Serial.print(F("+max timings     : "));
+  Serial.println(statistics.max_timings);
+  Serial.print(F("+preamble found  : "));
+  Serial.println(statistics.preamble_found);
+  Serial.print(F("+checksum ok     : "));
+  Serial.println(statistics.checksum_ok);
+  Serial.print(F("+checksum failed : "));
+  Serial.println(statistics.checksum_fails);
+}
+
+void clear_statistics()
+{
+  memset( (void*)&statistics, 0, sizeof(statistics));
+}

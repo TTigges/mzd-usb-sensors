@@ -24,6 +24,11 @@ size_t OilSensor::setup(unsigned int eepromLocation)
   return (size_t)0;
 }
 
+void OilSensor::timeout()
+{
+  /* nothing */  
+}
+
 const char *OilSensor::getName()
 {
   return "OIL";

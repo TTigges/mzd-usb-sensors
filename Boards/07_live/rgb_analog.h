@@ -7,16 +7,6 @@
 
 #ifdef RGB_SUPPORT
 
-/* It is correct that we use Dx pins here.
- * analogWrite() generates PWM signals on Dx pins.
- * 
- * NOTE: Not all pins are PWM capable.
- *       See Arduino reference pages.
- */
-#define RGB_RED_PORT   D1
-#define RGB_GREEN_PORT D2
-#define RGB_BLUE_PORT  D3
-
 class RgbAnalog : public Action {
 
   private:
@@ -27,6 +17,7 @@ class RgbAnalog : public Action {
   public:
     size_t setup(unsigned int eepromLocation);
     const char *getName();
+    void timeout();
     void getData();
     void sendData();
     void sendConfig();

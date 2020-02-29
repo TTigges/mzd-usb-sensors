@@ -9,6 +9,7 @@
 #include "action.h"
 
 #include "tpms_ble.h"
+#include "cc1101.h"
 #include "tpms_433.h"
 #include "oil_sensor.h"
 #include "rgb_analog.h"
@@ -16,7 +17,67 @@
 
 
 
-String versionInfo = "0.1.4";
+String versionInfo = "0.1.5";
+
+
+#define ENABLE_MEMDEBUG
+
+
+#ifdef ENABLE_MEMDEBUG
+
+/* ATMega 328 p
+ *
+ *    0 -   31 Register File (32)
+ *   32 -   95 Standard IO Memory (64)
+ *   96 -  255 Extended IO Memory (160)
+ *  256 - 2303 SRAM (2048)
+ */
+
+/* Start of free memory in SRAM */
+#define freeStart memdebug[0]
+/* Stackpointer */
+#define stackLow memdebug[1]
+/* Gap size or initial free bytes */
+#define gapSize memdebug[2]
+/* Free bytes determined by free space check */
+#define gapFree memdebug[3]
+
+/* Initialize every byte within the gap between
+ * freeStart and stackLow with bit pattern 01010101
+ */
+#define MEMDEBUG_INIT()                       \
+do {                                          \
+    uint16_t i;                               \
+    cli();                                    \
+    gapFree = 0;                              \
+    freeStart = (uint16_t)malloc( 1);         \
+    stackLow = SPH << 8 | SPL;                \
+    gapSize = stackLow - freeStart - 2;       \
+    for( i=0; i<gapSize; i++) {               \
+        *(byte*)(freeStart+i) = 0x55;         \
+    }                                         \
+    sei();                                    \
+} while( false)
+
+/* Check how many bytes are still free.
+ * (Unchanged pattern 01010101)
+ */
+#define MEMDEBUG_CHECK()                      \
+do {                                          \
+    uint16_t i;                               \
+    gapFree = 0;                              \
+    for( i=0; i<gapSize; i++) {               \
+        if( *(byte*)(freeStart+i) != 0x55) {  \
+            break;                            \
+        } else {                              \
+            gapFree++;                        \
+        }                                     \
+    }                                         \
+} while( false)
+
+uint16_t memdebug[4];
+
+#endif
 
 
 
@@ -39,13 +100,13 @@ const char *INFO_LIST[] = {
 
 /* Last command gotten */
 char currentCommand = NO_COMMAND;
-#define MAX_FUNNAME_LEN 30
+#define MAX_FUNNAME_LEN 20
 char currentFunction[MAX_FUNNAME_LEN +1]; /* Keep the +1 !! */
 
 
 
 /* Parameter storage */
-#define MAX_PARAMETER 10
+#define MAX_PARAMETER 5
 #define MAX_PARAMETER_KEY_LEN 8
 
 typedef struct parameter_t {
@@ -56,7 +117,7 @@ typedef struct parameter_t {
 parameter_t parameter[MAX_PARAMETER];
 byte paramIdx;
 
-#define PARAMDATA_MAX_SIZE 256
+#define PARAMDATA_MAX_SIZE 128
 
 char paramData[PARAMDATA_MAX_SIZE];
 int paramDataPtr;
@@ -70,7 +131,7 @@ void setup() {
   pinMode( LED_BUILTIN, OUTPUT);
 
   Serial.begin( 19200);
-  Serial.setTimeout( 100);
+  Serial.setTimeout( 20);
 
   while( !Serial) {
     ;
@@ -98,6 +159,10 @@ void setup() {
   setupActions();
 
   blinkLed( 500, 1);
+
+#ifdef ENABLE_MEMDEBUG
+  MEMDEBUG_INIT();
+#endif    
 }
 
 void loop() {
@@ -130,7 +195,8 @@ void loop() {
     break;
     
   case NO_COMMAND:
-    /* Nothing to do */
+    /* Timeout 100msec */
+    runTimeout();
     break;
 
   default:
@@ -330,6 +396,30 @@ static void infoCommand()
     case ALL_INFO:
       sendMoreData( "VERSION=" + versionInfo);
       sendMoreData( actionSimulate ? "SIMULATE=true" : "SIMULATE=false");
+
+      dump_statistics();
+      
+#ifdef ENABLE_MEMDEBUG     
+      MEMDEBUG_CHECK();
+      Serial.print(F("+mem: "));
+      Serial.print( freeStart);
+      Serial.print(F("/"));
+      Serial.print( gapFree);
+      Serial.print(F("/"));
+      Serial.println( gapSize);
+
+/*
+      Serial.print(F("+"));
+      size_t i;
+      for( byte i=0; i<80; i++) {
+        Serial.print( *(byte*)(freeStart+i), HEX); 
+        Serial.print(F(" "));   
+      }
+      Serial.println();
+*/
+      
+#endif
+ 
       break;
       
     case VERSION_INFO:

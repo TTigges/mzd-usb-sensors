@@ -7,25 +7,36 @@
 
 #ifdef TPMS_433_SUPPORT
 
-#define TPMS_433_NUM_SENSORS 4
+#include "tpms_decode.h"
 
-#define FRONT_LEFT  0
-#define FRONT_RIGHT 1
-#define REAR_LEFT   2
-#define REAR_RIGHT  3
+
+/* Reserved space for our sensors */
+#define TPMS_433_NUM_SENSORS    4
+/* We keep some extra space for sensors that are not ours */
+#define TPMS_433_EXTRA_SENSORS  4
+
+#define TPMS_433_ID_LENGTH      4 // in bytes
 
 /*
  * Configuration structure stored in EEPROM.
  * It holds the sensor IDs for all 4 tires.
  */
 typedef struct tpms433_config_t {
-  
-  /* TODO: Adjust length and data type */
-  char smac[TPMS_433_NUM_SENSORS][16];
+
+  byte sensorId[TPMS_433_NUM_SENSORS][TPMS_433_ID_LENGTH];
   
   checksum_t checksum;
   
 } tpms433_config_t;
+
+typedef struct tpms433_sensor_t {
+
+  byte sensorId[TPMS_433_ID_LENGTH];
+
+  float press_bar;
+  int temp_c;
+  
+} tpms433_sensor_t;
 
 /*
  * This modules configuration data.
@@ -39,16 +50,24 @@ class Tpms433 : public Action {
 
   private:
     unsigned int configLocation;
-    float tpmsPress[TPMS_433_NUM_SENSORS] = { 0.0, 0.0, 0.0, 0.0 };
-    float tpmsTemp[TPMS_433_NUM_SENSORS] = { 0.0, 0.0, 0.0, 0.0 };
-
+    tpms433_sensor_t sensor[TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS];
+    
   public:
     size_t setup(unsigned int settingsLocation);
     const char *getName();
+    void timeout();
     void getData();
     void sendData();
     void sendConfig();
     void setConfig();
+
+  private:
+    void id2hex( byte b[], char hex[]);
+    void hex2id( char hex[], byte b[]);
+
+    byte find_sensor( byteArray_t *data);
+    bool match_id( byte b[], byteArray_t *data);
+    bool is_empty( byte b[]);
 };
 
 #endif

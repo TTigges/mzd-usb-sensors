@@ -8,7 +8,7 @@
 /* Disable simulation to get real data */
 boolean actionSimulate = false;
 
-#define MAX_ACTIONS 10
+#define MAX_ACTIONS 6
 
 /* This is the superclass of all actions.
  * Every action has to implement below 6 methods.
@@ -28,6 +28,9 @@ class Action {
     /* Called once in the global setup() function */
     virtual size_t setup(unsigned int eepromLocation) = 0;
 
+    /* Called periodically */
+    virtual void timeout() = 0;
+    
     /* Called to read attached sensors data before sendData() is called */
     virtual void getData() = 0;
     

@@ -20,6 +20,8 @@
 
 #ifdef TPMS_433_SUPPORT
 
+CC1101 receiver;
+
 /*
  * This function is called once when the MC boots up.
  * It reads configuration data from EEPROM and returns the size of the data read.
@@ -40,22 +42,49 @@ size_t Tpms433::setup(unsigned int eepromLocation)
   EEPROM.get( eepromLocation, tpms433Config);
 
   if( tpms433Config.checksum != computeChecksum( &tpms433Config, sizeOfConfig)) {
-    
-    /* TODO: Set default values in case the checksum is wrong and there is no valid data in the EEPROM */
-    
-    strcpy( tpms433Config.smac[FRONT_LEFT],  "000000000000");
-    strcpy( tpms433Config.smac[FRONT_RIGHT], "111111111111");
-    strcpy( tpms433Config.smac[REAR_LEFT],   "222222222222");
-    strcpy( tpms433Config.smac[REAR_RIGHT],  "333333333333");
 
+    memset( (void*)&tpms433Config, 0, sizeof(tpms433Config));
     tpms433Config.checksum = computeChecksum( &tpms433Config, sizeOfConfig);
 
     EEPROM.put( eepromLocation, tpms433Config);
   }
 
-  /* TODO: Initialilzation code goes here */
+  /* Clear sensor array */
+  memset( (void*)&sensor[0], 0, sizeof(tpms433_sensor_t) * (TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS));
+  
+  /* Configure receiver, setup ISR and start receiving */
+  receiver.reset();
 
   return (size_t)sizeOfConfig;
+}
+
+/* This method is called periodically on USB receive timeout which is 20msec.
+ *  
+ * Check if the receiver has data available and decode them.
+ */
+void Tpms433::timeout()
+{
+  byteArray_t data;
+  byte id;
+  byte i;
+    
+  if ( receiver_state == STATE_DATA_AVAILABLE)
+  {
+    /* Returns true is decoding went fine and checksum was ok. */
+    if( decode_tpms( timings, timings_len, first_edge_state, &data)) {
+
+      id = find_sensor( &data);
+
+      for( i = 0; i < TPMS_433_ID_LENGTH; i++) {
+        sensor[id].sensorId[i] = data.bytes[i];
+      }
+      sensor[id].press_bar = (float)data.bytes[5] * 1.38 / 100; //pressure in bar
+      sensor[id].temp_c    = data.bytes[6] - 50;
+    }
+
+    init_buffer();
+    receiver_state = STATE_IDLE;
+  }
 }
 
 /*
@@ -86,15 +115,10 @@ void Tpms433::getData()
      * Pressure: Two digits right of the dot.
      * Temperature: One digit right of the dot.
      */
-    tpmsPress[FRONT_RIGHT] = (180 + random(40)) / 100.0;
-    tpmsPress[FRONT_LEFT] = (180 + random(40)) / 100.0;
-    tpmsPress[REAR_RIGHT] = (180 + random(40)) / 100.0;
-    tpmsPress[REAR_LEFT] = (180 + random(40)) / 100.0;
-
-    tpmsTemp[FRONT_RIGHT] = (-100 + random(900)) / 10.0;
-    tpmsTemp[FRONT_LEFT] = (-100 + random(900)) / 10.0;
-    tpmsTemp[REAR_RIGHT] = (-100 + random(900)) / 10.0;
-    tpmsTemp[REAR_LEFT] = (-100 + random(900)) / 10.0;
+    for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
+      sensor[i].press_bar = (180 + random(40)) / 100.0;
+      sensor[i].temp_c    = (-100 + random(900)) / 10;
+    }
   }
   else 
   {
@@ -113,15 +137,16 @@ void Tpms433::getData()
  */
 void Tpms433::sendData()
 {
-  String data;
+  char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
 
   /* FL: temp press FR: temp press RL: temp press RR: temp press */
-  data = "FL: "+String(tpmsTemp[FRONT_LEFT],1)+" "+String(tpmsPress[FRONT_LEFT],2)
-       +" FR: "+String(tpmsTemp[FRONT_RIGHT],1)+" "+String(tpmsPress[FRONT_RIGHT],2)
-       +" RL: "+String(tpmsTemp[REAR_LEFT],1)+" "+String(tpmsPress[REAR_LEFT],2)
-       +" RR: "+String(tpmsTemp[REAR_RIGHT],1)+" "+String(tpmsPress[REAR_RIGHT],2);
   
-  sendMoreData( data);
+  for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
+    id2hex( sensor[i].sensorId, hexstr );
+    hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
+    
+    sendMoreData( String("ID:")+hexstr+" "+String( sensor[i].temp_c,1)+" "+String(sensor[i].press_bar,2));
+  }
 }
 
 /*
@@ -133,47 +158,48 @@ void Tpms433::sendData()
  */
 void Tpms433::sendConfig()
 {
-  sendMoreData( "FL="+String(tpms433Config.smac[FRONT_LEFT]));
-  sendMoreData( "FR="+String(tpms433Config.smac[FRONT_RIGHT]));
-  sendMoreData( "RL="+String(tpms433Config.smac[REAR_LEFT]));
-  sendMoreData( "RR="+String(tpms433Config.smac[REAR_RIGHT]));
+  char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
+
+  for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
+    id2hex( tpms433Config.sensorId[i], hexstr );
+    hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
+    sendMoreData( hexstr);
+  }
 }
 
 /*
  * This function is called to set configuration values for this action.
  * The configuration is stored in EEPROM and survives a reboot.
  * 
- * The CMU executes usbget -d <device> -s TPMS -p "FL=xxxx" -p "FR=xxxx" -p "RL=xxxx" -p "RR=xxxx"
+ * The CMU executes: usbget -d <device> -s TPMS -p "0=xxxx" -p "1=xxxx" -p "2=xxxx" -p "3=xxxx"
  */
 void Tpms433::setConfig()
 {
   boolean configHasChanged = false;
-  
-  /* TODO: Get new config data */
-  
-  const char *config_FL = getStringParam( "FL" );
-  const char *config_FR = getStringParam( "FR" );
-  const char *config_RL = getStringParam( "RL" );
-  const char *config_RR = getStringParam( "RR" );
+    
+  const char *id = getStringParam( "0" );
 
-  if( config_FL != NULL) {
-      /* TODO: set config data here */
-      configHasChanged = true;
+  if( id != NULL) {
+    hex2id( id, tpms433Config.sensorId[0]);
+    configHasChanged = true;
   }
 
-  if( config_FL != NULL) {
-      /* TODO: set config data here */
-      configHasChanged = true;
+  id = getStringParam( "1" );
+  if( id != NULL) {
+    hex2id( id, tpms433Config.sensorId[1]);
+    configHasChanged = true;
   }
 
-  if( config_FL != NULL) {
-      /* TODO: set config data here */  
-      configHasChanged = true;
+  id = getStringParam( "2" );
+  if( id != NULL) {
+    hex2id( id, tpms433Config.sensorId[2]);
+    configHasChanged = true;
   }
 
-  if( config_FL != NULL) {
-      /* TODO: set config data here */  
-      configHasChanged = true;
+  id = getStringParam( "3" );
+  if( id != NULL) {
+    hex2id( id, tpms433Config.sensorId[3]);
+    configHasChanged = true;
   }
 
   if( configHasChanged ) {
@@ -181,6 +207,109 @@ void Tpms433::setConfig()
       tpms433Config.checksum = computeChecksum( &tpms433Config, sizeof(tpms433Config));
       EEPROM.put( configLocation, tpms433Config);
   }  
+}
+
+/* ***************** PRIVATE ******************* */
+
+/*
+ * Convert 4 bytes sensor ID to 8 hex chars
+ */
+void Tpms433::id2hex( byte b[], char hex[]) {
+
+  byte ci = 0;
+  byte v;
+  char ch;
+  
+  for( byte i = 0; i < TPMS_433_ID_LENGTH; i++) {
+      v = b[i];
+ 
+      ch = ((v >> 4) & 0x0f);
+      ch += (ch > 9) ? ('a'-10) : '0';
+      hex[ ci++ ] = ch;
+      
+      ch = v & 0x0f;
+      ch += (ch > 9) ? ('a'-10) : '0';
+      hex[ ci++ ] = ch;
+  }
+}
+
+/*
+ * Convert a hex string into 4 sensor ID bytes.
+ */
+void Tpms433::hex2id( char hex[], byte b[]) {
+
+  byte ci = 0;
+  byte v;
+  char ch;
+  
+  for( byte i = 0; i < TPMS_433_ID_LENGTH; i++) {
+    ch = hex[ci++];
+    if( !ch) break;
+    v = (ch - ((ch > '9') ? 'a'-10 : '0')) << 4;
+
+    ch = hex[ci++];
+    if( !ch) break;
+    v |= ch - ((ch > '9') ? 'a'-10 : '0');
+    
+    b[i] = v;
+  }
+}
+
+byte Tpms433::find_sensor( byteArray_t *data)
+{
+  byte last = TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS -1;
+  byte id;
+
+  /* First check whether this is one of your predefined sensors */
+  for( id = 0; id < TPMS_433_NUM_SENSORS; id++) {
+    if( match_id( tpms433Config.sensorId[id], data)) {
+      return id;
+    }
+  }
+
+  if( TPMS_433_EXTRA_SENSORS > 0) {
+    /* Check for existence */
+    for( id = TPMS_433_NUM_SENSORS; id < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; id++) {
+      if( match_id( sensor[id].sensorId, data)) {
+        return id;
+      }
+    }
+  
+    /* Check for empty slot */
+    for( id = TPMS_433_NUM_SENSORS; id < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; id++) {
+      if( is_empty( sensor[id].sensorId)) {
+        return id;
+      }
+    }
+  }
+
+  return last;  
+}
+
+bool Tpms433::match_id( byte b[], byteArray_t *data) 
+{
+  byte i;
+
+  for( i = 0; i < TPMS_433_ID_LENGTH; i++) {
+    if( b[i] != get_byte( data, i)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool Tpms433::is_empty( byte b[])
+{
+  byte i;
+
+  for( i = 0; i < TPMS_433_ID_LENGTH; i++) {
+    if( b[i] != 0) {
+      return false;
+    }
+  }
+
+  return true;  
 }
 
 #endif

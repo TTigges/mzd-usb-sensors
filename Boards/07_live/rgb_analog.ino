@@ -34,6 +34,11 @@ size_t RgbAnalog::setup(unsigned int eepromLocation)
   return (size_t)0;
 }
 
+void RgbAnalog::timeout()
+{
+  /* nothing */  
+}
+
 const char *RgbAnalog::getName()
 {
   return "RGB";
