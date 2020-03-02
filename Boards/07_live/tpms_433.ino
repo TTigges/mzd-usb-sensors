@@ -42,15 +42,17 @@ size_t Tpms433::setup(unsigned int eepromLocation)
   EEPROM.get( eepromLocation, tpms433Config);
 
   if( tpms433Config.checksum != computeChecksum( &tpms433Config, sizeOfConfig)) {
-
+    /* No valid configuration found, clear and save empty config */
     memset( (void*)&tpms433Config, 0, sizeof(tpms433Config));
     tpms433Config.checksum = computeChecksum( &tpms433Config, sizeOfConfig);
 
     EEPROM.put( eepromLocation, tpms433Config);
   }
 
+  next_score_adj = millis() + 1000 * TPMS_433_SCORE_TIMEOUT_s;
+
   /* Clear sensor array */
-  memset( (void*)&sensor[0], 0, sizeof(tpms433_sensor_t) * (TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS));
+  set_sensor_IDs_from_config();
   
   /* Configure receiver, setup ISR and start receiving */
   receiver.reset();
@@ -64,26 +66,59 @@ size_t Tpms433::setup(unsigned int eepromLocation)
  */
 void Tpms433::timeout()
 {
+  unsigned long now = millis();
   byteArray_t data;
   byte id;
   byte i;
-    
+
+  /* Lower score of all sensors periodically */
+  if( now > next_score_adj) {
+    next_score_adj = now + 1000 * TPMS_433_SCORE_TIMEOUT_s;
+
+    for( id = 0; id < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; id++) {
+      if( sensor[id].score > 0) {
+        sensor[id].score--;
+      }
+    }
+  }
+
   if ( receiver_state == STATE_DATA_AVAILABLE)
   {
     /* Returns true is decoding went fine and checksum was ok. */
+
     if( decode_tpms( timings, timings_len, first_edge_state, &data)) {
 
+      /* We can enable receiver state here because the timings buffer
+       * is not used anymore.
+       */
+      init_buffer();
+      receiver_state = STATE_IDLE;
+
       id = find_sensor( &data);
+      
+      /* find_sensor may return -1 if there are no extra slots available */
+      if( id >= 0) {
+        sensor[id].press_bar = (float)data.bytes[5] * 1.38 / 100; //pressure in bar
+        sensor[id].temp_c    = (float)data.bytes[6] - 50;
+        //sensor[id].lastupdated = now;
 
-      for( i = 0; i < TPMS_433_ID_LENGTH; i++) {
-        sensor[id].sensorId[i] = data.bytes[i];
+        if( sensor[id].score >= TPMS_433_SCORE_MAX - TPMS_433_SCORE_ADD) {
+          sensor[id].score = TPMS_433_SCORE_MAX;
+        } else {
+          sensor[id].score += TPMS_433_SCORE_ADD;
+        }
+
+        /* We need to sort only after new data was inserted */
+        sort_sensors( id);
+        
+#ifdef DISPLAY_SUPPORT
+        UpdateDisplay( sensor);
+#endif
       }
-      sensor[id].press_bar = (float)data.bytes[5] * 1.38 / 100; //pressure in bar
-      sensor[id].temp_c    = data.bytes[6] - 50;
+    } else {
+      init_buffer();
+      receiver_state = STATE_IDLE;
     }
-
-    init_buffer();
-    receiver_state = STATE_IDLE;
   }
 }
 
@@ -117,15 +152,16 @@ void Tpms433::getData()
      */
     for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
       sensor[i].press_bar = (180 + random(40)) / 100.0;
-      sensor[i].temp_c    = (-100 + random(900)) / 10;
+      sensor[i].temp_c    = (-100 + random(900)) / 10.0;
+      //sensor[i].lastupdated = millis();
     }
   }
   else 
   {
     /* TODO: Real implementation goes here */
-    
+
     /* Use configuration data (sensor IDs) to filter sampled data */
-    
+
   }
 }
 
@@ -145,7 +181,14 @@ void Tpms433::sendData()
     id2hex( sensor[i].sensorId, hexstr );
     hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
     
-    sendMoreData( String("ID:")+hexstr+" "+String( sensor[i].temp_c,1)+" "+String(sensor[i].press_bar,2));
+    sendMoreDataStart();
+    Serial.print(F("ID="));
+    Serial.print(hexstr);
+    Serial.print(F(" T="));
+    Serial.print(sensor[i].temp_c,1);
+    Serial.print(F(" P="));
+    Serial.print(sensor[i].press_bar,2);
+    sendMoreDataEnd();
   }
 }
 
@@ -160,10 +203,26 @@ void Tpms433::sendConfig()
 {
   char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
 
-  for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
-    id2hex( tpms433Config.sensorId[i], hexstr );
+  for( byte i = 0; i < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; i++) {
+    //id2hex( tpms433Config.sensorId[i], hexstr );
+    id2hex( sensor[i].sensorId, hexstr );
     hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
-    sendMoreData( hexstr);
+    
+    sendMoreDataStart();
+    Serial.print(i);
+    //Serial.print(F("="));
+    //Serial.print(hexstr);
+    Serial.print(F(" ID="));
+    Serial.print(hexstr);
+    Serial.print(F(" T="));
+    Serial.print(sensor[i].temp_c,1);
+    Serial.print(F(" P="));
+    Serial.print(sensor[i].press_bar,2);
+    //Serial.print(F(" U="));
+    //Serial.print(sensor[i].lastupdated);
+    Serial.print(F(" S="));
+    Serial.print(sensor[i].score);
+    sendMoreDataEnd();
   }
 }
 
@@ -206,6 +265,7 @@ void Tpms433::setConfig()
 
       tpms433Config.checksum = computeChecksum( &tpms433Config, sizeof(tpms433Config));
       EEPROM.put( configLocation, tpms433Config);
+      set_sensor_IDs_from_config();
   }  
 }
 
@@ -255,43 +315,67 @@ void Tpms433::hex2id( char hex[], byte b[]) {
   }
 }
 
-byte Tpms433::find_sensor( byteArray_t *data)
+/* 
+ *  Find a sensor that matched id in 'data'
+ *  
+ *  First try to find a slot with the same sensor ID.
+ *  If none was found, try to find an empty slot.
+ *  If that fails as well, replace the last sensor.
+ */
+int Tpms433::find_sensor( byteArray_t *data)
 {
-  byte last = TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS -1;
   byte id;
 
-  /* First check whether this is one of your predefined sensors */
-  for( id = 0; id < TPMS_433_NUM_SENSORS; id++) {
-    if( match_id( tpms433Config.sensorId[id], data)) {
+  /* First check whether we have seen this sensors before */
+  for( id = 0; id < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; id++) {
+    if( match_id( id, data)) {
       return id;
     }
   }
-
-  if( TPMS_433_EXTRA_SENSORS > 0) {
-    /* Check for existence */
-    for( id = TPMS_433_NUM_SENSORS; id < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; id++) {
-      if( match_id( sensor[id].sensorId, data)) {
-        return id;
-      }
-    }
   
+  if( TPMS_433_EXTRA_SENSORS > 0) {
+
     /* Check for empty slot */
-    for( id = TPMS_433_NUM_SENSORS; id < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; id++) {
-      if( is_empty( sensor[id].sensorId)) {
+    for( id = 0; id < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; id++) {
+      if( is_empty( id)) {
+
+        /* Copy sensor id */
+        for( byte i = 0; i < TPMS_433_ID_LENGTH; i++) {
+          sensor[id].sensorId[i] = data->bytes[i];
+        }
+
         return id;
       }
     }
   }
 
-  return last;  
+  if( TPMS_433_EXTRA_SENSORS == 0) {
+    return -1;
+    
+  } else { /* Replace last sensor */
+    id = TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS -1;
+
+    /* Clear sensor data */
+    memset( (void*)&sensor[id], 0, sizeof(tpms433_sensor_t));
+
+    /* Copy sensor id */
+    for( byte i = 0; i < TPMS_433_ID_LENGTH; i++) {
+      sensor[id].sensorId[i] = data->bytes[i];
+    }
+    
+    return id;
+  }
 }
 
-bool Tpms433::match_id( byte b[], byteArray_t *data) 
+/*
+ * Check if a sensor matches id (first bytes in 'data')
+ */
+bool Tpms433::match_id( byte id, byteArray_t *data) 
 {
   byte i;
 
   for( i = 0; i < TPMS_433_ID_LENGTH; i++) {
-    if( b[i] != get_byte( data, i)) {
+    if( sensor[id].sensorId[i] != get_byte( data, i)) {
       return false;
     }
   }
@@ -299,17 +383,104 @@ bool Tpms433::match_id( byte b[], byteArray_t *data)
   return true;
 }
 
-bool Tpms433::is_empty( byte b[])
+/* 
+ * Check if a sensor slot is empty.
+ * ID = 0x00000000
+ */
+bool Tpms433::is_empty( byte id)
 {
   byte i;
 
   for( i = 0; i < TPMS_433_ID_LENGTH; i++) {
-    if( b[i] != 0) {
+    if( sensor[id].sensorId[i] != 0) {
       return false;
     }
   }
 
   return true;  
+}
+
+/* 
+ * Check for empty config 
+ */
+bool Tpms433::empty_config()
+{
+  for( byte id = 0; id < TPMS_433_NUM_SENSORS; id++) {
+    for( byte i = 0; i < TPMS_433_ID_LENGTH; i++) {
+      if( tpms433Config.sensorId[id][i] != 0) {
+        return false;
+      }
+    }
+  }
+  
+  return true;
+}
+
+/*
+ * Copy sensor s(ource) to t(arget)
+ */
+void Tpms433::copy_sensor( tpms433_sensor_t *t, tpms433_sensor_t *s)
+{
+  memcpy( t, s, sizeof(tpms433_sensor_t));
+}
+
+/*
+ * Clear all sensors and copy sensor IDs from EEPROM config.
+ */
+void Tpms433::set_sensor_IDs_from_config()
+{
+  byte id;
+  
+  for( id = 0; id < TPMS_433_NUM_SENSORS; id++) {
+
+    /* Clear sensor data */
+    memset( (void*)&sensor[id], 0, sizeof(tpms433_sensor_t));
+
+    /* Copy sensor id */
+    for( byte i = 0; i < TPMS_433_ID_LENGTH; i++) {
+      sensor[id].sensorId[i] = tpms433Config.sensorId[id][i];
+    } 
+  }
+
+  for( id = TPMS_433_NUM_SENSORS; id < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; id++) {
+
+    /* Clear sensor data */
+    memset( (void*)&sensor[id], 0, sizeof(tpms433_sensor_t));
+  }
+}
+
+void Tpms433::sort_sensors( byte top)
+{
+  tpms433_sensor_t temp;
+  byte id;
+  byte score;
+
+  /* Where to start sorting */
+  byte bottom = empty_config() ? 0 : TPMS_433_NUM_SENSORS;
+  byte pos = bottom;
+  
+  /* A new identified sensor always replaces the sensor with highest slot id.
+   * We simply need to move this sensor up to the right place.
+   */
+  score = sensor[top].score;
+  
+  for( id = top; id > bottom; id--) {
+    if( sensor[id-1].score > score) {
+      pos = id;
+      break; 
+    }
+  }
+
+  if( pos < top) {
+    /* Move all sensors from top to pos down one slot. */
+    copy_sensor( &temp, &sensor[ top]);
+
+    for( id = top; id > pos; id--) {
+      copy_sensor( &sensor[id], &sensor[id-1]);
+    }
+
+    copy_sensor( &sensor[pos], &temp);
+  }
 }
 
 #endif

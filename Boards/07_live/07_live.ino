@@ -15,6 +15,7 @@
 #include "rgb_analog.h"
 #include "ws2801.h"
 
+#include "display.h"
 
 
 String versionInfo = "0.1.5";
@@ -137,6 +138,9 @@ void setup() {
     ;
   }
 
+#ifdef DISPLAY_SUPPORT
+  display_init();
+#endif
 
   /* Register all supported actions.
    */
@@ -392,22 +396,32 @@ static int mapToInfo( char info[])
 
 static void infoCommand()
 {
-  switch( mapToInfo( currentFunction)) {
-    case ALL_INFO:
-      sendMoreData( "VERSION=" + versionInfo);
-      sendMoreData( actionSimulate ? "SIMULATE=true" : "SIMULATE=false");
+  sendMoreDataStart();
+  Serial.print( F("version     = "));
+  Serial.print(versionInfo);
+  sendMoreDataEnd();
 
-      dump_statistics();
+  sendMoreDataStart();
+  Serial.print( F("simulate    = "));
+  if( actionSimulate) {
+    Serial.print( F("true"));
+  } else {
+    Serial.print( F("false"));  
+  }
+  sendMoreDataEnd();
+
+  dump_statistics();
       
 #ifdef ENABLE_MEMDEBUG     
-      MEMDEBUG_CHECK();
-      Serial.print(F("+mem: "));
-      Serial.print( freeStart);
-      Serial.print(F("/"));
-      Serial.print( gapFree);
-      Serial.print(F("/"));
-      Serial.println( gapSize);
+  MEMDEBUG_CHECK();
 
+  sendMoreDataStart();
+  Serial.print(F("memory      = "));
+  Serial.print( gapFree);
+  Serial.print(F("/"));
+  Serial.print( gapSize);
+  sendMoreDataEnd();
+  
 /*
       Serial.print(F("+"));
       size_t i;
@@ -419,20 +433,6 @@ static void infoCommand()
 */
       
 #endif
- 
-      break;
-      
-    case VERSION_INFO:
-      sendMoreData( "VERSION=" + versionInfo);
-      break;
-
-    case SIMULATE_INFO:
-      sendMoreData( actionSimulate ? "SIMULATE=true" : "SIMULATE=false");
-      break;
-      
-    default:
-      flagError( ERROR_UNKNOWN_INFO);
-  }
   
   sendEOT();
 }

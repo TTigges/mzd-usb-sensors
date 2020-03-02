@@ -74,6 +74,7 @@
 
 #ifdef ARDUINO_GENERIC
 
+ #define DISPLAY_SUPPORT
  #define CC1101_SUPPORT
  #define TPMS_433_SUPPORT
  #define OIL_SUPPORT
@@ -83,6 +84,12 @@
 #endif
 
 /* **************************************************************** */
+
+#ifdef DISPLAY_SUPPORT
+
+ #define DISPLAY_I2C_ADDRESS 0x3C
+
+#endif
 
 /*
  * Configuration of all modules.

@@ -59,23 +59,23 @@ static volatile statistics_t statistics;
  */
 void dump_statistics()
 {
-  Serial.print(F("+cs interrupts   : "));
+  Serial.print(F("+cs intr.    = "));
   Serial.println(statistics.cs_interrupts);
-  Serial.print(F("+data interrupts : "));
+  Serial.print(F("+data intr.  = "));
   Serial.println(statistics.data_interrupts);
-  Serial.print(F("+longest carr. us: "));
+  Serial.print(F("+max carr us = "));
   Serial.println(statistics.carrier_len);  
-  Serial.print(F("+carrier detected: "));
+  Serial.print(F("+carr detect = "));
   Serial.println(statistics.carrier_detected);
-  Serial.print(F("+data available  : "));
+  Serial.print(F("+data avail. = "));
   Serial.println(statistics.data_available);
-  Serial.print(F("+max timings     : "));
+  Serial.print(F("+max timings = "));
   Serial.println(statistics.max_timings);
-  Serial.print(F("+preamble found  : "));
+  Serial.print(F("+preamble ok = "));
   Serial.println(statistics.preamble_found);
-  Serial.print(F("+checksum ok     : "));
+  Serial.print(F("+cksum ok    = "));
   Serial.println(statistics.checksum_ok);
-  Serial.print(F("+checksum failed : "));
+  Serial.print(F("+cksum fails = "));
   Serial.println(statistics.checksum_fails);
 }
 

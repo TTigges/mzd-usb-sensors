@@ -56,9 +56,14 @@ void RgbAnalog::sendData()
 
 void RgbAnalog::sendConfig()
 {
-  sendMoreData( "R="+String(red));
-  sendMoreData( "G="+String(green));
-  sendMoreData( "B="+String(blue));
+  sendMoreDataStart();
+  Serial.print("R=");
+  Serial.print(red);
+  Serial.print(" G=");
+  Serial.print(green);
+  Serial.print(" B=");
+  Serial.print(blue);
+  sendMoreDataEnd();
 }
 
 void RgbAnalog::setConfig()

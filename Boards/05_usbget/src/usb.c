@@ -5,6 +5,7 @@
  *
  * File History
  * ============
+ *   wolfix      29-Feb-2020  (0.1.3) Support default device
  *   wolfix      21-Jul-2019  USB device open code.
  *                            usbList() added
  *                            Arduino Mico added.
@@ -59,6 +60,9 @@ struct usbDevice {
     int receiveBufferEnd;
 };
 
+/* ********** forward definitions ********** */
+
+static void usbListInternal( char *devName, uint16_t maxLen);
 
 static const deviceInfo_t *deviceInfoByName( const char *devName);
 
@@ -101,6 +105,18 @@ const char *usbEnumDeviceNames( unsigned int *idx) {
 /* List vendor ID and product ID of USB devices.
  */
 void usbList( void)
+{
+    usbListInternal( NULL, 0);
+}
+
+/* Try to find a device connected to USB and return its name.
+ */
+void usbGetDefaultDevice( char *devName, uint16_t maxLen)
+{
+    usbListInternal( devName, maxLen);
+}
+
+static void usbListInternal( char *devName, uint16_t maxLen)
 {
     int rc;
     int i;
@@ -162,13 +178,25 @@ void usbList( void)
             devInfo = deviceInfoByVendorProduct( desc.idVendor,
                                                  desc.idProduct);
 
-            printf( "VId=%04x PId=%04x [%s] %s %s\n",
+            /* If we did pass space to return a device name
+             * then assume we want to get the default device.
+             */
+            if( devName != NULL) {
+                if( devInfo != NULL) {
+                    strncpy( devName, devInfo->name, maxLen);
+                    devName[maxLen-1] = '\0';
+                    libusb_unref_device( dev);
+                    break;
+                }
+            } else { /* ... otherwise just list all devices */
+                printf( "VId=%04x PId=%04x [%s] %s %s\n",
                     desc.idVendor, desc.idProduct,
                     manufacturer,
                     product,
                     devInfo ? devInfo->name : "");
 
-            libusb_unref_device( dev);
+                libusb_unref_device( dev);
+            }
         }
     }
 

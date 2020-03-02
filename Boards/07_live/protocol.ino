@@ -69,19 +69,23 @@ const char *getData() {
 }
 
 
-void sendCommand(char command, String data)
+void sendCommand(char command, char *data)
 {
   Serial.print(command);
-  if( data != NULL || data.length() > 0) {
+  if( data != NULL || strlen(data) > 0) {
     Serial.print( data);
   }
   Serial.println();  
 }
 
-void sendMoreData( String data)
+void sendMoreDataStart()
 {
   Serial.print(MORE_DATA);
-  Serial.println( data); 
+}
+
+void sendMoreDataEnd()
+{
+  Serial.println();
 }
 
 void sendEOT()
@@ -94,10 +98,10 @@ void sendEOT()
   }
 }
 
-void sendError( String message)
+void sendError( char *message)
 {
   Serial.print(NACK_OR_ERROR);
-  if( message != NULL || message.length() > 0) {
+  if( message != NULL || strlen(message) > 0) {
     Serial.print( message);
   }
   Serial.println();  

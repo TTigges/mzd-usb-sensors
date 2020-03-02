@@ -59,7 +59,12 @@ void OilSensor::getData()
 void OilSensor::sendData()
 {
   /* oiltemp: xx oilpress: yy */
-  sendMoreData( "oiltemp: "+String(oilTemp,1)+" oilpress: "+String(oilPress,2));
+  sendMoreDataStart();
+  Serial.print( "oiltemp: ");
+  Serial.print( oilTemp,1);
+  Serial.print( " oilpress: ");
+  Serial.print( oilPress,2);
+  sendMoreDataEnd();
 }
 
 void OilSensor::sendConfig()

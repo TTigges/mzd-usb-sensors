@@ -13,9 +13,13 @@
 /* Reserved space for our sensors */
 #define TPMS_433_NUM_SENSORS    4
 /* We keep some extra space for sensors that are not ours */
-#define TPMS_433_EXTRA_SENSORS  4
+#define TPMS_433_EXTRA_SENSORS  8
 
 #define TPMS_433_ID_LENGTH      4 // in bytes
+
+#define TPMS_433_SCORE_MAX       250
+#define TPMS_433_SCORE_ADD        10
+#define TPMS_433_SCORE_TIMEOUT_s  30
 
 /*
  * Configuration structure stored in EEPROM.
@@ -32,9 +36,10 @@ typedef struct tpms433_config_t {
 typedef struct tpms433_sensor_t {
 
   byte sensorId[TPMS_433_ID_LENGTH];
-
+  // unsigned long lastupdated;
   float press_bar;
-  int temp_c;
+  float temp_c;
+  byte score;
   
 } tpms433_sensor_t;
 
@@ -50,6 +55,7 @@ class Tpms433 : public Action {
 
   private:
     unsigned int configLocation;
+    unsigned long next_score_adj;
     tpms433_sensor_t sensor[TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS];
     
   public:
@@ -65,9 +71,13 @@ class Tpms433 : public Action {
     void id2hex( byte b[], char hex[]);
     void hex2id( char hex[], byte b[]);
 
-    byte find_sensor( byteArray_t *data);
-    bool match_id( byte b[], byteArray_t *data);
-    bool is_empty( byte b[]);
+    int find_sensor( byteArray_t *data);
+    bool match_id( byte id, byteArray_t *data);
+    bool is_empty( byte id);
+    bool empty_config();
+    void copy_sensor( tpms433_sensor_t *t, tpms433_sensor_t *s);
+    void set_sensor_IDs_from_config();
+    void sort_sensors( byte top);
 };
 
 #endif

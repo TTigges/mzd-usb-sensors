@@ -50,7 +50,9 @@ void listFunctions()
   unsigned int i;
 
   for( i=0; i<actionIdx; i++) {
-    sendMoreData(actionList[i]->getName());
+    sendMoreDataStart();
+    Serial.print( actionList[i]->getName());
+    sendMoreDataEnd();
   }
 
   sendEOT();

@@ -3,6 +3,9 @@
  *
  * USB support.
  *
+ * File History
+ * ============
+ *   wolfix      29-Feb-2020  (0.1.3) Support default device
  */
 
 #ifndef _USBGET_USB_H
@@ -24,6 +27,7 @@
 
 #define RECEIVE_BUFFER_SIZE      64
 
+#define MAX_DEVICENAME_LEN       20
 
 /* Opaque device structure */
 typedef struct usbDevice usbDevice;
@@ -46,6 +50,10 @@ const char *usbEnumDeviceNames( unsigned int *idx);
 /* List vendor ID and product ID of USB devices.
  */
 void usbList( void);
+
+/* Try to find a device connected to USB and return its name.
+ */
+void usbGetDefaultDevice( char *devName, uint16_t maxLen);
 
 /* Open USB device by vendor and product id.
  * Returns NULL if the device was not found or we run into an error.

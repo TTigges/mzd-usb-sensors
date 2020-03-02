@@ -44,13 +44,16 @@ static volatile byte receiver_state;
 
 static volatile bool first_edge_state = LOW;
 
-#define CC1101_MAX_TIMINGS   200
+#define CC1101_MAX_TIMINGS   255
 volatile byte timings[CC1101_MAX_TIMINGS];
 volatile byte timings_len = 0;
 
 volatile static unsigned long LastEdgeTime_us = 0;
 
-unsigned long CD_Width;
+/* Range of valid carrier length */
+#define CARRIER_MIN_LEN_usec    9600
+#define CARRIER_MAX_LEN_usec   10500
+unsigned long carrier_len_usec;
 
 void init_buffer()
 {
@@ -62,7 +65,7 @@ void init_buffer()
 void edge_interrupt()
 {
   unsigned long ts = micros();
-  unsigned long BitWidth;
+  unsigned long bit_width;
 
   statistics.data_interrupts++;
   
@@ -85,18 +88,18 @@ void edge_interrupt()
         return;
       }
 
-      BitWidth = ts - LastEdgeTime_us;
+      bit_width = ts - LastEdgeTime_us;
       LastEdgeTime_us = ts;
 
-      if (BitWidth <= 12)  //ignore glitches
+      if (bit_width <= 10)  //ignore glitches
       {
         return;
       }
   
-      if (BitWidth > 255)
-        BitWidth = 255;
+      if (bit_width > 255)
+        bit_width = 255;
 
-      timings[timings_len++] = (byte)BitWidth;
+      timings[timings_len++] = (byte)bit_width;
       
       break;
 
@@ -117,7 +120,7 @@ void carrier_sense_interrupt()
   {
     case STATE_IDLE:
       if( carrier == HIGH) {
-        CD_Width = LastEdgeTime_us = ts;
+        carrier_len_usec = LastEdgeTime_us = ts;
         receiver_state = STATE_CARRIER_DETECTED;
         statistics.carrier_detected++;
       }
@@ -125,9 +128,9 @@ void carrier_sense_interrupt()
 
     case STATE_CARRIER_DETECTED:
       if( carrier == LOW) {
-        CD_Width = ts - CD_Width;
-        if( CD_Width > statistics.carrier_len) {
-          statistics.carrier_len = CD_Width;
+        carrier_len_usec = ts - carrier_len_usec;
+        if( carrier_len_usec > statistics.carrier_len) {
+          statistics.carrier_len = carrier_len_usec;
         }
         receiver_state = STATE_IDLE;
       }
@@ -135,13 +138,13 @@ void carrier_sense_interrupt()
 
     case STATE_RECEIVING:
       if( carrier == LOW) {
-        CD_Width = ts - CD_Width;
+        carrier_len_usec = ts - carrier_len_usec;
         
-        if( CD_Width > statistics.carrier_len) {
-          statistics.carrier_len = CD_Width;
+        if( carrier_len_usec > statistics.carrier_len) {
+          statistics.carrier_len = carrier_len_usec;
         }
         
-        if ((CD_Width >= 9500) && (CD_Width <= 10500)) {
+        if ((carrier_len_usec >= CARRIER_MIN_LEN_usec) && (carrier_len_usec <= CARRIER_MAX_LEN_usec)) {
           receiver_state = STATE_DATA_AVAILABLE;
           statistics.data_available++; 
         } else {
