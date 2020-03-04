@@ -34,6 +34,15 @@ void setupActions()
   }
 }
 
+void runTimeout()
+{
+  unsigned int i;
+
+  for( i=0; i<actionIdx; i++) {
+    actionList[i]->timeout();
+  }
+}
+
 /* Sends a list of supported actions.
  */
 void listFunctions()
@@ -41,7 +50,9 @@ void listFunctions()
   unsigned int i;
 
   for( i=0; i<actionIdx; i++) {
-    sendMoreData(actionList[i]->getName());
+    sendMoreDataStart();
+    Serial.print( actionList[i]->getName());
+    sendMoreDataEnd();
   }
 
   sendEOT();

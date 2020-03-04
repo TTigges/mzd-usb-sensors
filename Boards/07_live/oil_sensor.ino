@@ -24,6 +24,11 @@ size_t OilSensor::setup(unsigned int eepromLocation)
   return (size_t)0;
 }
 
+void OilSensor::timeout()
+{
+  /* nothing */  
+}
+
 const char *OilSensor::getName()
 {
   return "OIL";
@@ -54,7 +59,12 @@ void OilSensor::getData()
 void OilSensor::sendData()
 {
   /* oiltemp: xx oilpress: yy */
-  sendMoreData( "oiltemp: "+String(oilTemp,1)+" oilpress: "+String(oilPress,2));
+  sendMoreDataStart();
+  Serial.print( "oiltemp: ");
+  Serial.print( oilTemp,1);
+  Serial.print( " oilpress: ");
+  Serial.print( oilPress,2);
+  sendMoreDataEnd();
 }
 
 void OilSensor::sendConfig()

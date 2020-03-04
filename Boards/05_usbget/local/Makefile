@@ -11,7 +11,7 @@ LDFLAGS= -lusb-1.0
 ####
 
 TARGET= usbget
-MODULES= support.o usb.o ftdi.o atmega32u4.o protocol.o usbget.o
+MODULES= support.o usb.o ftdi.o atmega32u4.o ch340.o protocol.o usbget.o
 
 all: $(TARGET)
 
@@ -36,7 +36,7 @@ support.o: ../src/support.c ../src/support.h
 usbget.o: ../src/usbget.c ../src/support.h ../src/usb.h ../src/protocol.h
 	$(CC) $(CFLAGS) -c ../src/usbget.c
 
-usb.o: ../src/usb.c ../src/support.h ../src/usb.h ../src/ftdi.h
+usb.o: ../src/usb.c ../src/support.h ../src/usb.h ../src/ftdi.h ../src/ch340.h
 	$(CC) $(CFLAGS) -c ../src/usb.c
 
 ftdi.o: ../src/ftdi.c ../src/support.h ../src/ftdi.h
@@ -44,3 +44,6 @@ ftdi.o: ../src/ftdi.c ../src/support.h ../src/ftdi.h
 
 atmega32u4.o: ../src/atmega32u4.c ../src/support.h ../src/atmega32u4.h
 	$(CC) $(CFLAGS) -c ../src/atmega32u4.c
+
+ch340.o: ../src/ch340.c ../src/support.h ../src/ch340.h
+	$(CC) $(CFLAGS) -c ../src/ch340.c

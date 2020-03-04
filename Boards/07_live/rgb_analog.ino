@@ -34,6 +34,11 @@ size_t RgbAnalog::setup(unsigned int eepromLocation)
   return (size_t)0;
 }
 
+void RgbAnalog::timeout()
+{
+  /* nothing */  
+}
+
 const char *RgbAnalog::getName()
 {
   return "RGB";
@@ -51,9 +56,14 @@ void RgbAnalog::sendData()
 
 void RgbAnalog::sendConfig()
 {
-  sendMoreData( "R="+String(red));
-  sendMoreData( "G="+String(green));
-  sendMoreData( "B="+String(blue));
+  sendMoreDataStart();
+  Serial.print("R=");
+  Serial.print(red);
+  Serial.print(" G=");
+  Serial.print(green);
+  Serial.print(" B=");
+  Serial.print(blue);
+  sendMoreDataEnd();
 }
 
 void RgbAnalog::setConfig()

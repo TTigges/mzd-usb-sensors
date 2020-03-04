@@ -7,10 +7,6 @@
 
 #ifdef OIL_SUPPORT
 
-/* Analog input pins (A/D converter) */
-#define OIL_T_PIN A0
-#define OIL_P_PIN A5
-
 class OilSensor : public Action {
 
   private:
@@ -20,6 +16,7 @@ class OilSensor : public Action {
   public:
     size_t setup(unsigned int eepromLocation);
     const char *getName();
+    void timeout();
     void getData();
     void sendData();
     void sendConfig();

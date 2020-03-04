@@ -41,6 +41,7 @@ class TpmsBLE : public Action {
   public:
     size_t setup(unsigned int settingsLocation);
     const char *getName();
+    void timeout();
     void getData();
     void sendData();
     void sendConfig();

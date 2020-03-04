@@ -59,6 +59,11 @@ size_t TpmsBLE::setup(unsigned int eepromLocation) {
   return sizeOfConfig;
 }
 
+void TpmsBLE::timeout()
+{
+  /* nothing */  
+}
+
 const char *TpmsBLE::getName()
 {
 

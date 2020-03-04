@@ -3,8 +3,8 @@
 # Requires a working Redbear Duo controller connected to the PC.
 #
 
-DEV=redbear_duo
-#DEV=arduino_nano
+#DEV=redbear_duo
+DEV=arduino_nano_clone
 
 P=/tmp/mnt/data_persist/dev/bin
 

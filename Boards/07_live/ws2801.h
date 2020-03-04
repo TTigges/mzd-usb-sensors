@@ -7,15 +7,6 @@
 
 #ifdef WS2801_SUPPORT
 
-/* Number of LEDs of the LED strip.
- * This is the default value. It can be changed via set command.
- * The value is saved in the EEPROM and survives a reboot.
- */
-#define WS2801_LED_COUNT 4
-
-#define WS2801_DATA_PIN  D4
-#define WS2801_CLOCK_PIN D5
-
 typedef struct ws2801_config_t {
   byte ledCount;
 
@@ -35,6 +26,7 @@ class WS2801 : public Action {
   public:
     size_t setup(unsigned int eepromLocation);
     const char *getName();
+    void timeout();
     void getData();
     void sendData();
     void sendConfig();

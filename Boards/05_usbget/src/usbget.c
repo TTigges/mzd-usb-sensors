@@ -16,13 +16,14 @@
  *
  *   Options:
  *     -d device_name             Specify device to use.
+ *                                If -d option is omitted search
+ *                                for suitable device.
  *     -v                         Verbose. Enable debug output.
  *     -?                         Print usage
  *
  *   Commands:
  *     -u                         List USB devices
- *     -i request                 Query infos
- *     -i ALL                     Query all infos
+ *     -i                         Query device infos
  *     -l                         List supported actions
  *     -q action [-p param ... ]  Query action
  *     -s action [-p param ... ]  Set action
@@ -49,7 +50,7 @@
  *
  *   $ usbget -d redbear_duo -s WS2801 -p R=10 -p G=10 -p B=10
  *
- *   $ usbget -d redbear_duo -i ALL
+ *   $ usbget -d redbear_duo -i
  *   VERSION=0.1.1
  *
  *
@@ -64,6 +65,8 @@
  *
  * File History
  * ============
+ *   wolfix      29-Feb-2020  (0.1.3) Support default device
+ *   wolfix      26-Jan-2020  (0.1.2) CH240 support
  *   wolfix      21-Jul-2019  USB device open code
  *   wolfix      04-Jul-2019  Code refactoring
  *   wolfix      25-Jun-2019  Fix getopt hang (signed/unsiged mismatch)
@@ -83,12 +86,15 @@
 #include <unistd.h>
 
 
-static const char* VERSION = "0.1.1";
+static const char* VERSION = "0.1.3";
 
 
-#define MAX_DEVICENAME_LEN  20
+
 static char deviceName[MAX_DEVICENAME_LEN];
 static usbDevice *device = NULL;
+
+/* Baud rate for Micros that are attached via FTDI or similar chip */
+#define USB_SPEED             ((uint32_t)19200)
 
 /* @TODO current limit of 10 actions */
 #define MAX_ACTIONS           10
@@ -143,9 +149,15 @@ int main( int argc, char **argv)
     parseOptions( argc, argv);
 
     if( strlen( deviceName) == 0) {
-        printfLog( "No device specified. "
-                   "Use -d option with supported device argument.\n");
-        exit(-1);
+        printfDebug( "No device specified. Searching for default device.\n");
+        usbGetDefaultDevice( deviceName, MAX_DEVICENAME_LEN);
+
+        if( strlen( deviceName) == 0) {
+            printfLog( "No device specified and no default device found.\n");
+            exit(-1);
+        } else {
+            printfDebug( "Default device: %s\n", deviceName);
+        }
     }
 
     /* Make sure only one instance accesses the USB port.
@@ -157,7 +169,7 @@ int main( int argc, char **argv)
         exit(-1);
     }
 
-    device = usbOpen( deviceName);
+    device = usbOpen( deviceName, USB_SPEED);
     if( !device) {
         releaseLock();
         exit(-1);
@@ -225,7 +237,7 @@ static void parseOptions( int argc, char **argv)
 
     deviceName[0] = '\0';
 
-#define ALL_GETOPTS "vd:ulc:i:q:s:p:?"
+#define ALL_GETOPTS "vd:ulc:iq:s:p:?"
 
     while((opt = getopt(argc, argv, ALL_GETOPTS)) != -1) {
         if( (char)opt ==  'v') {
@@ -278,7 +290,6 @@ static RunOption parseArguments( int argc, char **argv)
 
         } else if((char)opt == 'i') {
             CHECK_STATE( 1, INFO);
-            SAFE_STRNCPY( optionAction, optarg, MAX_OPTION_ACTION_LEN);
 
         } else if( (char)opt == 'q') {
             CHECK_STATE(2, QUERY);
@@ -321,6 +332,8 @@ static void usage()
     printf(" usage: usbget [options] [command ... ] \n\n");
     printf("   Options:\n");
     printf("     -d device_name             USB device type\n");
+    printf("                                If -d option is omitted search\n");
+    printf("                                for suitable device.\n");
     printf("        Valid device names:\n");
     while( (name = usbEnumDeviceNames( &idx))) {
         printf("          %s\n", name);
@@ -329,8 +342,7 @@ static void usage()
     printf("     -?                         Print usage\n\n");
     printf("   Commands:\n");
     printf("     -u                         List USB devices\n");
-    printf("     -i request                 Query infos\n");
-    printf("     -i ALL                     Query all infos\n");
+    printf("     -i                         Query device infos\n");
     printf("     -l                         List supported actions\n");
     printf("     -q action [-p param ... ]  Query action\n");
     printf("     -s action [-p param ... ]  Set action\n");

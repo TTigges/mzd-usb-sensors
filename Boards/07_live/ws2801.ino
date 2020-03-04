@@ -52,6 +52,11 @@ size_t WS2801::setup(unsigned int eepromLocation)
   return (size_t)sizeOfConfig;
 }
 
+void WS2801::timeout()
+{
+  /* nothing */  
+}
+
 const char *WS2801::getName()
 {
   return "WS2801";
