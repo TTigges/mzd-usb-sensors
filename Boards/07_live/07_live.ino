@@ -18,7 +18,7 @@
 #include "display.h"
 
 
-String versionInfo = "0.1.5";
+String versionInfo = "0.1.6";
 
 
 #define ENABLE_MEMDEBUG
@@ -132,7 +132,7 @@ void setup() {
   pinMode( LED_BUILTIN, OUTPUT);
 
   Serial.begin( 19200);
-  Serial.setTimeout( 20);
+  Serial.setTimeout( 10);
 
   while( !Serial) {
     ;

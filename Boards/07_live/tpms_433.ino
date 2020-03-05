@@ -274,7 +274,7 @@ void Tpms433::setConfig()
 /*
  * Convert 4 bytes sensor ID to 8 hex chars
  */
-void Tpms433::id2hex( byte b[], char hex[]) {
+void static Tpms433::id2hex( byte b[], char hex[]) {
 
   byte ci = 0;
   byte v;
@@ -296,7 +296,7 @@ void Tpms433::id2hex( byte b[], char hex[]) {
 /*
  * Convert a hex string into 4 sensor ID bytes.
  */
-void Tpms433::hex2id( char hex[], byte b[]) {
+void static Tpms433::hex2id( char hex[], byte b[]) {
 
   byte ci = 0;
   byte v;

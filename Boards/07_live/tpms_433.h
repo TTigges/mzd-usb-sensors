@@ -19,7 +19,7 @@
 
 #define TPMS_433_SCORE_MAX       250
 #define TPMS_433_SCORE_ADD        10
-#define TPMS_433_SCORE_TIMEOUT_s  30
+#define TPMS_433_SCORE_TIMEOUT_s  20
 
 /*
  * Configuration structure stored in EEPROM.
@@ -67,10 +67,10 @@ class Tpms433 : public Action {
     void sendConfig();
     void setConfig();
 
+    void static id2hex( byte b[], char hex[]);
+    void static hex2id( char hex[], byte b[]);
+    
   private:
-    void id2hex( byte b[], char hex[]);
-    void hex2id( char hex[], byte b[]);
-
     int find_sensor( byteArray_t *data);
     bool match_id( byte id, byteArray_t *data);
     bool is_empty( byte id);

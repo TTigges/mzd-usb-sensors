@@ -1,5 +1,6 @@
 .vscode/
 JCI-Backup/
+*~
 Boards/05_usbget/m3-toolchain/
 Boards/05_usbget/cmu/*.o
 Boards/05_usbget/cmu/*.d

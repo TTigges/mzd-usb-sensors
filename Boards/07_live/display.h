@@ -40,29 +40,6 @@ void show_title()
 }
 
 
-/*
- * Convert 4 bytes sensor ID to 8 hex chars
- * TODO: Stolen from tmps_433. Need to collapse to a single function, e.g. make the original public
- */
-void id2hex( byte b[], char hex[]) {
-
-  byte ci = 0;
-  byte v;
-  char ch;
-  
-  for( byte i = 0; i < TPMS_433_ID_LENGTH; i++) {
-      v = b[i];
- 
-      ch = ((v >> 4) & 0x0f);
-      ch += (ch > 9) ? ('a'-10) : '0';
-      hex[ ci++ ] = ch;
-      
-      ch = v & 0x0f;
-      ch += (ch > 9) ? ('a'-10) : '0';
-      hex[ ci++ ] = ch;
-  }
-}
-
 #if DISPLAYMODE_SETUP
 
 void UpdateDisplay(tpms433_sensor_t sensor[])
@@ -95,8 +72,8 @@ void UpdateDisplay(tpms433_sensor_t sensor[])
       
      //display.print(sensor[i].TPMS_ID,HEX);
     
-
-      id2hex( sensor[i].sensorId, hexstr );
+      Tpms433::id2hex( sensor[i].sensorId, hexstr );
+      
       hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
       display.print(hexstr);
         

@@ -1,11 +1,13 @@
 --- usage ---
 
-usbget 0.1.2
+usbget 0.1.3
 
- usage: usbget [options] [command ... ] 
+ usage: usbget \[options\] \[command ... \] 
 
    Options:
      -d device_name             USB device type
+                                If -d option is omitted search
+                                for suitable device.
         Valid device names:
           redbear_duo
           arduino_pro
@@ -13,15 +15,14 @@ usbget 0.1.2
           arduino_nano_clone
           arduino_micro
      -v                         Enable debug output
-     -?                         Print usage
+     -\?                         Print usage
 
    Commands:
      -u                         List USB devices
-     -i request                 Query infos
-     -i ALL                     Query all infos
+     -i                         Query device infos
      -l                         List supported actions
-     -q action [-p param ... ]  Query action
-     -s action [-p param ... ]  Set action
+     -q action \[-p param ... \]  Query action
+     -s action \[-p param ... \]  Set action
      -c action                  Query action config
 
    In case no command is specified all supported actions are queried.
@@ -34,25 +35,46 @@ No suitable USB device found.
 TPMS
 OIL
 RGB
-WS2801
 --- info ---
-VERSION=*.*.*
-SIMULATE=false
+version     = 0.1.6
+simulate    = false
+cs intr.    = \d+
+data intr.  = \d+
+max carr us = \d+
+carr detect = \d+
+data avail. = \d+
+max timings = \d+
+preamble ok = \d+
+cksum ok    = \d+
+cksum fails = \d+
+memory      = \d+/\d+
 --- config ---
-FL=80EACA100326
-FR=81EACA2002C0
-RL=82EACA300633
-RR=83EACA400619
-LEDS=*
-R=*
-G=*
-B=*
+0 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+1 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+2 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+3 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+4 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+5 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+6 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+7 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+8 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+9 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+10 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+11 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+Error from USB device: Unknown action request.
 --- query ---
-FL: *.* *.* FR: *.* *.* RL: *.* *.* RR: *.* *.*
-oiltemp: *.* oilpress: *.*
+ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+oiltemp: \d+.\d+ oilpress: -?\d+.\d+
+Error from USB device: Unknown action request.
 --- query multiple ---
-FL: *.* *.* FR: *.* *.* RL: *.* *.* RR: *.* *.*
-oiltemp: *.* oilpress: *.*
+ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+oiltemp: \d+.\d+ oilpress: -?\d+.\d+
 --- set ---
 --- set max parameters ---
 Error from USB device: Unknown action request.
@@ -61,8 +83,6 @@ Error from USB device: Unknown action request.
 No device info for device named: arduino_bla
 --- wrong action ---
 Error from USB device: Unknown action request.
---- wrong info request ---
-Error from USB device: Unknown info request.
 --- to many parameters ---
 To many parameters: 11
 --- long device name ---
@@ -70,15 +90,17 @@ No device info for device named: redbear_duo_redbear
 --- long action name ---
 Error from USB device: Unknown action request.
 Initializing libusb.
-Searching for USB device: [vendor=0x2b04,product=0xc058]
+Searching for USB device: \[vendor=0x1a86,product=0x7523\]
 Opening USB device.
 Claiming USB interface.
-USB interface(s) claimed.
+USB interface\(s\) claimed.
+Running CH340 initialization code.
+CH340: opening with 19200 baud
 USB device opened.
 DrainInput 0 chars rc=-7: 
-queryAction()
-USB Send (21) : QBLABLA7890BLABLA789
-USB Send (2) : .
+queryAction\(\)
+USB Send \(21\) : QBLABLA7890BLABLA789
+USB Send \(2\) : .
 usbGetChar 26 chars rc=0: 47 85 110 107 110 111 119 110 32 97 99 116 105 111 110 32 114 101 113 117 101 115 116 46 13 10 
 USB Recv: cmd=/ 'Unknown action request.'
 USB device closed.

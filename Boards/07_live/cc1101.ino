@@ -133,6 +133,7 @@ void carrier_sense_interrupt()
           statistics.carrier_len = carrier_len_usec;
         }
         receiver_state = STATE_IDLE;
+        timings_len = 0;
       }
       break;
 
@@ -149,6 +150,7 @@ void carrier_sense_interrupt()
           statistics.data_available++; 
         } else {
           receiver_state = STATE_IDLE;
+          timings_len = 0;
         }
       }
       break;
