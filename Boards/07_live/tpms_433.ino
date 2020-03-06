@@ -60,7 +60,7 @@ size_t Tpms433::setup(unsigned int eepromLocation)
   return (size_t)sizeOfConfig;
 }
 
-/* This method is called periodically on USB receive timeout which is 20msec.
+/* This method is called periodically on USB receive timeout which is 10msec.
  *  
  * Check if the receiver has data available and decode them.
  */
@@ -173,23 +173,26 @@ void Tpms433::getData()
  */
 void Tpms433::sendData()
 {
-  char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
+  // char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
 
   /* FL: temp press FR: temp press RL: temp press RR: temp press */
+
+  sendMoreDataStart();
   
   for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
-    id2hex( sensor[i].sensorId, hexstr );
-    hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
+    // id2hex( sensor[i].sensorId, hexstr );
+    // hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
     
-    sendMoreDataStart();
-    Serial.print(F("ID="));
-    Serial.print(hexstr);
-    Serial.print(F(" T="));
+    Serial.print(i);
+    Serial.print(F(": "));
     Serial.print(sensor[i].temp_c,1);
-    Serial.print(F(" P="));
+    Serial.print(F(" "));
     Serial.print(sensor[i].press_bar,2);
-    sendMoreDataEnd();
+    Serial.print(F(" "));
+
   }
+
+  sendMoreDataEnd();
 }
 
 /*
@@ -303,11 +306,11 @@ void static Tpms433::hex2id( char hex[], byte b[]) {
   char ch;
   
   for( byte i = 0; i < TPMS_433_ID_LENGTH; i++) {
-    ch = hex[ci++];
+    ch = tolower(hex[ci++]);
     if( !ch) break;
     v = (ch - ((ch > '9') ? 'a'-10 : '0')) << 4;
 
-    ch = hex[ci++];
+    ch = tolower(hex[ci++]);
     if( !ch) break;
     v |= ch - ((ch > '9') ? 'a'-10 : '0');
     

@@ -43,6 +43,19 @@ cat $P/oil.out >>test.log 2>&1
 rm -f $P/ws2801.out
 ../local/usbget -d $DEV -q WS2801 >>test.log 2>&1
 
+echo --- extract data --- >>test.log
+
+TPMSFLTEMP=`cat /tmp/mnt/data_persist/dev/bin/tpms.out | awk '{print $2}'`
+TPMSFLPRES=`cat /tmp/mnt/data_persist/dev/bin/tpms.out | awk '{print $3}'`
+TPMSFRTEMP=`cat /tmp/mnt/data_persist/dev/bin/tpms.out | awk '{print $5}'`
+TPMSFRPRES=`cat /tmp/mnt/data_persist/dev/bin/tpms.out | awk '{print $6}'`
+TPMSRLTEMP=`cat /tmp/mnt/data_persist/dev/bin/tpms.out | awk '{print $8}'`
+TPMSRLPRES=`cat /tmp/mnt/data_persist/dev/bin/tpms.out | awk '{print $9}'`
+TPMSRRTEMP=`cat /tmp/mnt/data_persist/dev/bin/tpms.out | awk '{print $11}'`
+TPMSRRPRES=`cat /tmp/mnt/data_persist/dev/bin/tpms.out | awk '{print $12}'`
+
+echo $TPMSFLTEMP $TPMSFLPRES $TPMSFRTEMP $TPMSFRPRES $TPMSRLTEMP $TPMSRLPRES $TPMSRRTEMP $TPMSRRPRES >>test.log
+
 echo --- query multiple --- >>test.log
 rm -f $P/tpms.out $P/oil.out
 ../local/usbget -d $DEV -q TPMS -q OIL >>test.log 2>&1

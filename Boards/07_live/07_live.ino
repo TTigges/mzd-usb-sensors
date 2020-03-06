@@ -18,7 +18,7 @@
 #include "display.h"
 
 
-String versionInfo = "0.1.6";
+String versionInfo = "0.1.7";
 
 
 #define ENABLE_MEMDEBUG
@@ -143,6 +143,10 @@ void setup() {
 #endif
 
   /* Register all supported actions.
+   * There is a limit of supported action.
+   * If you need more that 6 supported actions
+   * increase MAX_ACTIONS in action.h
+   * 
    */
 #ifdef TPMS_BLE_SUPPORT
   addAction( new TpmsBLE);

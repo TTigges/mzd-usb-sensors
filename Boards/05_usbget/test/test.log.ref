@@ -36,7 +36,7 @@ TPMS
 OIL
 RGB
 --- info ---
-version     = 0.1.6
+version     = 0.1.7
 simulate    = false
 cs intr.    = \d+
 data intr.  = \d+
@@ -49,31 +49,27 @@ cksum ok    = \d+
 cksum fails = \d+
 memory      = \d+/\d+
 --- config ---
-0 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-1 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-2 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-3 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-4 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-5 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-6 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-7 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-8 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-9 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-10 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
-11 ID=[0-9a-f]+ T=\d+.0 P=[12].\d+ S=\d+
+0 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+1 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+2 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+3 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+4 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+5 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+6 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+7 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+8 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+9 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+10 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
+11 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
 Error from USB device: Unknown action request.
 --- query ---
-ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
-ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
-ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
-ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+0: \d+.\d+ \d+.\d+ 1: \d+.\d+ \d+.\d+ 2: \d+.\d+ \d+.\d+ 3: \d+.\d+ \d+.\d+.*
 oiltemp: \d+.\d+ oilpress: -?\d+.\d+
 Error from USB device: Unknown action request.
+--- extract data ---
+\d+.\d+ \d+.\d+ \d+.\d+ \d+.\d+ \d+.\d+ \d+.\d+ \d+.\d+ \d+.\d+
 --- query multiple ---
-ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
-ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
-ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
-ID=[0-9a-f]+ T=\d+.0 P=[12].\d+
+0: \d+.\d+ \d+.\d+ 1: \d+.\d+ \d+.\d+ 2: \d+.\d+ \d+.\d+ 3: \d+.\d+ \d+.\d+.*
 oiltemp: \d+.\d+ oilpress: -?\d+.\d+
 --- set ---
 --- set max parameters ---
