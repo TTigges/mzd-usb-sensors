@@ -72,8 +72,8 @@ void UpdateDisplay(tpms433_sensor_t sensor[])
       
      //display.print(sensor[i].TPMS_ID,HEX);
     
+
       Tpms433::id2hex( sensor[i].sensorId, hexstr );
-      
       hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
       display.print(hexstr);
         
