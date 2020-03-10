@@ -100,7 +100,7 @@ void Tpms433::timeout()
       if( id >= 0) {
         sensor[id].press_bar = (float)data.bytes[5] * 1.38 / 100; //pressure in bar
         sensor[id].temp_c    = (float)data.bytes[6] - 50;
-        //sensor[id].lastupdated = now;
+        sensor[id].last_update = now;
 
         if( sensor[id].score >= TPMS_433_SCORE_MAX - TPMS_433_SCORE_ADD) {
           sensor[id].score = TPMS_433_SCORE_MAX;
@@ -110,10 +110,6 @@ void Tpms433::timeout()
 
         /* We need to sort only after new data was inserted */
         sort_sensors( id);
-        
-#ifdef DISPLAY_SUPPORT
-        UpdateDisplay( sensor);
-#endif
       }
     } else {
       init_buffer();
@@ -270,6 +266,11 @@ void Tpms433::setConfig()
       EEPROM.put( configLocation, tpms433Config);
       set_sensor_IDs_from_config();
   }  
+}
+
+tpms433_sensor_t* Tpms433::getSensors() {
+  
+  return sensor;
 }
 
 /* ***************** PRIVATE ******************* */

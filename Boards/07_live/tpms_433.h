@@ -36,7 +36,7 @@ typedef struct tpms433_config_t {
 typedef struct tpms433_sensor_t {
 
   byte sensorId[TPMS_433_ID_LENGTH];
-  // unsigned long lastupdated;
+  unsigned long last_update;
   float press_bar;
   float temp_c;
   byte score;
@@ -67,8 +67,9 @@ class Tpms433 : public Action {
     void sendConfig();
     void setConfig();
 
-    void static id2hex( byte b[], char hex[]);
-    void static hex2id( char hex[], byte b[]);
+    static void id2hex( byte b[], char hex[]);
+    static void hex2id( char hex[], byte b[]);
+    tpms433_sensor_t* getSensors();
     
   private:
     int find_sensor( byteArray_t *data);
@@ -79,5 +80,7 @@ class Tpms433 : public Action {
     void set_sensor_IDs_from_config();
     void sort_sensors( byte top);
 };
+
+Tpms433 tpmsReceiver;
 
 #endif

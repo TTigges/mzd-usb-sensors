@@ -18,7 +18,7 @@
 #include "display.h"
 
 
-String versionInfo = "0.1.7";
+String versionInfo = "0.1.8";
 
 
 #define ENABLE_MEMDEBUG
@@ -152,7 +152,7 @@ void setup() {
   addAction( new TpmsBLE);
 #endif
 #ifdef TPMS_433_SUPPORT
-  addAction( new Tpms433);
+  addAction( &tpmsReceiver);
 #endif
 #ifdef OIL_SUPPORT
   addAction( new OilSensor);
@@ -176,7 +176,7 @@ void setup() {
 void loop() {
 
   char commandChar = readCommand();
-
+  
   switch( commandChar) {
 
   case INFO_COMMAND:
@@ -203,8 +203,12 @@ void loop() {
     break;
     
   case NO_COMMAND:
-    /* Timeout 100msec */
+    /* Timeout 10 msec */
     runTimeout();
+#ifdef DISPLAY_SUPPORT
+    display_handler();
+#endif
+
     break;
 
   default:
