@@ -32,7 +32,7 @@ static const byte y_pos[] = { 2,  2, 5,  5};
 
 
 /* Automatically switch display to next mode after 10 seconds */
-#define DISPLAY_AUTOSWITCH    true
+#define DISPLAY_AUTOSWITCH       true
 /* Display mode switch time in units of DISPLAY_UPDATE_msec
  *  20 x 500 msec = 10 sec
  */
@@ -93,7 +93,7 @@ void display_handler()
 
     if( DISPLAY_AUTOSWITCH ) {
       change++;
-      if( change > 20) {
+      if( change > DISPLAY_SWITCHTIME) {
         change = 0;
         display_mode++;
         if( display_mode > 4) {
