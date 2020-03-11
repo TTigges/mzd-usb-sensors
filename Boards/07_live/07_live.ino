@@ -15,14 +15,12 @@
 #include "rgb_analog.h"
 #include "ws2801.h"
 
+String versionInfo = "0.1.9";
+
 #include "display.h"
 
 
-String versionInfo = "0.1.8";
-
-
 #define ENABLE_MEMDEBUG
-
 
 #ifdef ENABLE_MEMDEBUG
 
@@ -82,29 +80,10 @@ uint16_t memdebug[4];
 
 
 
-/* List of supported info requests */
-const char *INFO_LIST[] = {
-  "ALL",
-  "VERSION",
-  "SIMULATE",
-  NULL /* Do not remove end marker */
-};
-
-/* The numeric values of following defines have to be in the 
- * same order as in INFO_LIST, starting with 0.
- */
-#define ALL_INFO       0
-#define VERSION_INFO   1
-#define SIMULATE_INFO  2
-
-
-
 /* Last command gotten */
 char currentCommand = NO_COMMAND;
 #define MAX_FUNNAME_LEN 20
 char currentFunction[MAX_FUNNAME_LEN +1]; /* Keep the +1 !! */
-
-
 
 /* Parameter storage */
 #define MAX_PARAMETER 5
@@ -388,20 +367,6 @@ static void handleError()
   resetState();
 }
 
-static int mapToInfo( char info[])
-{
-  int infoId = -1;
-
-  for( int i=0; INFO_LIST[i] != NULL; i++) {
-    if( strcmp( info, INFO_LIST[i]) == 0) {
-      infoId = i;
-      break;
-    }
-  }
-
-  return infoId;
-}
-
 static void infoCommand()
 {
   sendMoreDataStart();
@@ -429,17 +394,7 @@ static void infoCommand()
   Serial.print(F("/"));
   Serial.print( gapSize);
   sendMoreDataEnd();
-  
-/*
-      Serial.print(F("+"));
-      size_t i;
-      for( byte i=0; i<80; i++) {
-        Serial.print( *(byte*)(freeStart+i), HEX); 
-        Serial.print(F(" "));   
-      }
-      Serial.println();
-*/
-      
+        
 #endif
   
   sendEOT();

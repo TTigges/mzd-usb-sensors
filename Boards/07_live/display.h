@@ -53,7 +53,7 @@ byte display_mode = DISPLAYMODE_SETUP;
 //byte display_mode = DISPLAYMODE_TEMPERATURE;
 //byte display_mode = DISPLAYMODE_PRESSURE;
 
-
+bool display_present = false;
 byte last_display_mode = display_mode;
 byte change = 0;
 unsigned long last_update = 0;
@@ -62,32 +62,48 @@ SSD1306AsciiWire display;
 
 
 /* ********** forward declarations ********** */
+
+void update_display(tpms433_sensor_t sensor[], bool full);
+
 void show_title();
-void UpdateDisplay(tpms433_sensor_t sensor[], bool full);
 void display_setup( tpms433_sensor_t sensor[], bool full);
 void display_temperature( tpms433_sensor_t sensor[], bool full);
 void display_pressure( tpms433_sensor_t sensor[], bool full);
-void display_statistics1();
-void display_statistics2();
+void display_statistics1( bool full);
+void display_statistics2( bool full);
 
 
 void display_init()
 {
   Wire.begin();
   Wire.setClock(400000L);
+
+  Wire.beginTransmission( DISPLAY_I2C_ADDRESS);
+  if (Wire.endTransmission() == 0) {
+    
+    /* Display found */
+    display_present = true;
+
+    display.begin(&Adafruit128x64, DISPLAY_I2C_ADDRESS);
+    display.setFont(Adafruit5x7);
+    display.clear();
   
-  display.begin(&Adafruit128x64, DISPLAY_I2C_ADDRESS);
-  display.setFont(Adafruit5x7);
-  display.clear();
-  
-  show_title();
+    show_title();
+  }
 }
 
-/* This is called every 10 msec */
+/* This is called every 10 msec.
+ *
+ * This is the only function called from outside world to control the display.
+ */
 void display_handler()
 {
   unsigned long now = millis();
-  bool full = false;
+  bool full_refresh = false;
+
+  if( !display_present) {
+    return;
+  }
 
   if( now >= last_update + DISPLAY_UPDATE_msec) {
 
@@ -106,25 +122,26 @@ void display_handler()
     {
       display.clear();
       last_display_mode = display_mode;
-      full = true;
+      full_refresh = true;
     }
     
-    UpdateDisplay( tpmsReceiver.getSensors(), full);
+    update_display( tpmsReceiver.getSensors(), full_refresh);
     
-    /* Update last_update last because it is used in UpdateDisplay() */
+    /* Update last_update last because it is used in update_display() */
     last_update = now;
   }
 }
 
 void show_title()
 {
+  display.setFont(Adafruit5x7);
   display.set1X();             // Normal 1:1 pixel scale
   display.setCursor(0, 0);
   display.println(" Abarth TPMS Monitor");
   display.println("   (TWJ Solutions)");
 }
 
-void UpdateDisplay( tpms433_sensor_t sensor[], bool full)
+void update_display( tpms433_sensor_t sensor[], bool full)
 {
   switch( display_mode)
   {
@@ -141,11 +158,11 @@ void UpdateDisplay( tpms433_sensor_t sensor[], bool full)
     break;
 
   case DISPLAYMODE_STATISTICS1:
-    display_statistics1();
+    display_statistics1( full);
     break;
 
   case DISPLAYMODE_STATISTICS2:
-    display_statistics2();
+    display_statistics2( full);
     break;
   }
 }
@@ -158,7 +175,7 @@ void display_setup(tpms433_sensor_t sensor[], bool full)
   char s[6];
   char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
   
-  show_title();
+  if( full) show_title();
   
   for (i = 0; i < 4; i++)
   {
@@ -180,9 +197,6 @@ void display_setup(tpms433_sensor_t sensor[], bool full)
       Tpms433::id2hex( sensor[i].sensorId, hexstr );   
       hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
       display.print(hexstr);
-        
-    //display.setFont(System5x7);          
-    //display.print(DisplayTimeoutBar(millis() - sensor[i].lastupdated));
     }
   }
 }
@@ -194,7 +208,7 @@ void display_temperature(tpms433_sensor_t sensor[], bool full)
   int y;
   char s[6];
 
-  show_title();
+  if( full) show_title();
   
   for (i = 0; i < 4; i++)
   {
@@ -218,12 +232,8 @@ void display_temperature(tpms433_sensor_t sensor[], bool full)
       display.set1X();
       display.clear(x, x+62, y+2, y+2);
 
-       //in bar...
       dtostrf(sensor[i].press_bar, 3, 2, s);
       display.print(s);
-
-//      display.setFont(System5x7);          
-//      display.print(DisplayTimeoutBar(millis() - sensor[i].lastupdated));
     }
   }
 }
@@ -235,7 +245,7 @@ void display_pressure(tpms433_sensor_t sensor[], bool full)
   int y;
   char s[6];
   
-  show_title();
+  if( full) show_title();
   
   for (i = 0; i < 4; i++)
   {
@@ -248,7 +258,6 @@ void display_pressure(tpms433_sensor_t sensor[], bool full)
       display.set2X();      
       display.clear(x, x+62, y, y+1);
 
-      //in bar...
       dtostrf(sensor[i].press_bar, 3, 2, s);
       display.print(s);
 
@@ -268,51 +277,70 @@ void display_pressure(tpms433_sensor_t sensor[], bool full)
   }
 }
 
-void display_statistics1()
+void display_statistics1( bool full)
 {
   display.setFont(Adafruit5x7);
   display.set1X();
-  
-  display.setCursor(0, 0);
-  display.print(F("Statistics"));
 
-  display.setCursor(0, 2);
-  display.print(F("cs intr.    "));
-  display.println(statistics.cs_interrupts);
-  display.setCursor(0, 3);
-  display.print(F("data intr.  "));
-  display.println(statistics.data_interrupts);
-  display.setCursor(0, 4);
-  display.print(F("max carr us "));
-  display.println(statistics.carrier_len);  
-  display.setCursor(0, 5);
-  display.print(F("carr detect "));
-  display.println(statistics.carrier_detected);
-  display.setCursor(0, 6);
-  display.print(F("data avail. "));
-  display.println(statistics.data_available);
-  display.setCursor(0, 7);
-  display.print(F("max timings "));
-  display.println(statistics.max_timings);
+  if( full) {
+    display.setCursor(0, 0);
+    display.print(F("Statistics"));
+
+    display.setCursor(0, 2);
+    display.print(F("version"));
+    display.setCursor(0, 3);
+    display.print(F("cs intr."));
+    display.setCursor(0, 4);
+    display.print(F("data intr."));
+    display.setCursor(0, 5);
+    display.print(F("max carr us"));
+    display.setCursor(0, 6);
+    display.print(F("carr detect"));
+    display.setCursor(0, 7);
+    display.print(F("data avail."));
+  }
+
+  display.setCursor(72, 2);
+  display.print(versionInfo);
+  display.setCursor(72, 3);
+  display.print(statistics.cs_interrupts);
+  display.setCursor(72, 4);
+  display.print(statistics.data_interrupts);
+  display.setCursor(72, 5);
+  display.print(statistics.carrier_len);  
+  display.setCursor(72, 6);
+  display.print(statistics.carrier_detected);
+  display.setCursor(72, 7);
+  display.print(statistics.data_available);
 }
 
-void display_statistics2()
+void display_statistics2( bool full)
 {
   display.setFont(Adafruit5x7);
   display.set1X();
 
-  display.setCursor(0, 0);
-  display.print(F("Statistics"));
+  if( full) {
+    display.setCursor(0, 0);
+    display.print(F("Statistics"));
 
-  display.setCursor(0, 2);
-  display.print(F("preamble ok "));
-  display.println(statistics.preamble_found);
-  display.setCursor(0, 3);
-  display.print(F("cksum ok    "));
-  display.println(statistics.checksum_ok);
-  display.setCursor(0, 4);
-  display.print(F("cksum fails "));
-  display.println(statistics.checksum_fails);
+    display.setCursor(0, 2);
+    display.print(F("max timings"));
+    display.setCursor(0, 3);
+    display.print(F("preamble ok"));
+    display.setCursor(0, 4);
+    display.print(F("cksum ok"));
+    display.setCursor(0, 5);
+    display.print(F("cksum fails"));
+  }
+
+  display.setCursor(72, 2);
+  display.print(statistics.max_timings);
+  display.setCursor(72, 3);
+  display.print(statistics.preamble_found);
+  display.setCursor(72, 4);
+  display.print(statistics.checksum_ok);
+  display.setCursor(72, 5);
+  display.print(statistics.checksum_fails);
 }
 
 #endif
