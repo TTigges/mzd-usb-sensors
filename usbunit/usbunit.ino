@@ -15,7 +15,7 @@
 #include "rgb_analog.h"
 #include "ws2801.h"
 
-String versionInfo = "0.1.9";
+String versionInfo = "0.2.0";
 
 #include "display.h"
 
