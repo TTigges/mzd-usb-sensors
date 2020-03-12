@@ -1,0 +1,14 @@
+.vscode/
+JCI-Backup/
+*~
+usbget/m3-toolchain/
+usbget/cmu/*.o
+usbget/cmu/*.d
+usbget/cmu/usbget
+usbget/local/*.o
+usbget/local/usbget
+usbget/test/test.log
+usbget/src/*.o
+usbget/src/usbget
+usbget/src/adlint/
+usbget/src/Makefile
