@@ -45,7 +45,7 @@ then
     BATSOC=`smdb-read -n vdm_vdt_current_data -e Battery_StateOfCharge`
    # BATSOC=`smdb-read -n vdm_vdt_current_data -e BattTracSoc_Pc_Actl`
     GPOS=`smdb-read -n vdm_vdt_current_data -e TransmissionGearPosition`
-    /tmp/mnt/data_persist/dev/bin/usb_rbduo_get
+    /tmp/mnt/data_persist/dev/bin/usbget -d redbear_duo -q TPMS -q OIL
    # "oiltemp: xx oilpress: yy"
     OILTEMP=`cat /tmp/mnt/data_persist/dev/bin/oil.out | awk '{print $2}'`
     OILPRES=`cat /tmp/mnt/data_persist/dev/bin/oil.out | awk '{print $4}'`

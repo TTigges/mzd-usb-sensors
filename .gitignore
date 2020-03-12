@@ -1,2 +1,14 @@
 .vscode/
 JCI-Backup/
+*~
+Boards/05_usbget/m3-toolchain/
+Boards/05_usbget/cmu/*.o
+Boards/05_usbget/cmu/*.d
+Boards/05_usbget/cmu/usbget
+Boards/05_usbget/local/*.o
+Boards/05_usbget/local/usbget
+Boards/05_usbget/test/test.log
+Boards/05_usbget/src/*.o
+Boards/05_usbget/src/usbget
+Boards/05_usbget/src/adlint/
+Boards/05_usbget/src/Makefile
