@@ -51,7 +51,7 @@
  *   $ usbget -d redbear_duo -s WS2801 -p R=10 -p G=10 -p B=10
  *
  *   $ usbget -d redbear_duo -i
- *   VERSION=0.1.1
+ *   VERSION=0.2.0
  *
  *
  * NOTES
@@ -65,6 +65,7 @@
  *
  * File History
  * ============
+ *   TTigges     12-Mar-2020  (0.2.0) <= Release, no changes. Tested and approved; In use in 124 Spider.
  *   wolfix      29-Feb-2020  (0.1.3) Support default device
  *   wolfix      26-Jan-2020  (0.1.2) CH240 support
  *   wolfix      21-Jul-2019  USB device open code
@@ -86,7 +87,7 @@
 #include <unistd.h>
 
 
-static const char* VERSION = "0.1.3";
+static const char* VERSION = "0.2.0";
 
 
 

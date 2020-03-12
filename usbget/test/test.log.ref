@@ -1,6 +1,6 @@
 --- usage ---
 
-usbget 0.1.3
+usbget 0.2.0
 
  usage: usbget \[options\] \[command ... \] 
 
