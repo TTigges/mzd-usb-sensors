@@ -44,7 +44,7 @@ CMU                  Microcontroller via USB
 
 #### Thanks:
 
-Wolfix for comming up with the main protocol when he heard that I wanted the CMU to communicate with a usb connected microcontroller, for the support and all the updates and ideas! I can't thank you enough!
+Wolfix for coming up with the main protocol when he heard that I wanted the CMU to communicate with a usb connected microcontroller, for the support and all the updates and ideas! I can't thank you enough!
 
 jayrockk for supporting the idea from the beginning, for all the help with receiving the 433 MHz signals and for the work on the PCBs.
 
