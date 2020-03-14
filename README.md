@@ -49,6 +49,12 @@ CMU                  Microcontroller via USB
 ³ depending on the sensor, the calculation of the incoming signal needs to be changed and adapted.
 
 
+## Supported Oil Sensors:
+
+- Pressure sensor:    Prosport PSSMOPS-PK
+- Temperature sensor: Prosport PSOWTS-JPNWP
+
+
 ## \* BLE – or: If your car does not have TPMS sensors but you want TPMS data:
 
 We started with BLE sensors (valve cover type) and decoded the received signals. Depending on the sensors you get, you might have to entirely start from scratch, decoding the signals. We also had issues receiving all four sensors, even with an external antenna installed.
