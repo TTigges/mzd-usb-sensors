@@ -3,6 +3,9 @@
  * 
  * Engine oil pressure and temperature.
  * 
+ * Pressure sensor:    Prosport PSSMOPS-PK
+ * Temperature sensor: Prosport PSOWTS-JPNWP
+ * 
  * Supported functions:
  * ====================
  * 
@@ -82,15 +85,31 @@ void OilSensor::setConfig()
 
 #define OIL_ABSZERO  273.15
 
+/* Temperature sensor result is linear,
+ * Pressure sensor is not.
+ * Multiplier for curve calculation:
+ * (5V²/(1023*2)) - (5V/4V)
+ *  5V = board voltage
+ *  4V = difference between 0.5V (lowest reading: 0 bar)
+ *       and 4.5V (highest reading: 10 bar)
+ * 
+ * This also applies to the RedBear (3.3V board voltage)
+ * since the sensor still gets and works with 5V.
+ * 
+ * But board specific: depending on OIL_MAXANALOGREAD!
+ */
+
 #ifdef REDBEAR_DUO
   #define OIL_MAXANALOGREAD 4095.0
   #define OIL_PMINVAL        410.0
   #define OIL_PMAXVAL       3689.0
+  #define OIL_MULTIPLIER       0.0030525f
 #endif
 #ifdef ARDUINO_GENERIC
   #define OIL_MAXANALOGREAD 1023.0
   #define OIL_PMINVAL        102.0
   #define OIL_PMAXVAL        922.0
+  #define OIL_MULTIPLIER       0.0122189f
 #endif
 
 float OilSensor::calcTemp(float tPinValue)
@@ -116,7 +135,7 @@ float OilSensor::calcPress(float pPinValue)
     pPinValue = OIL_PMAXVAL;
   }
   
-  return pPinValue * 0.00305250305250305 - 1.25;
+  return pPinValue * OIL_MULTIPLIER - 1.25;
 }
 
 #endif
