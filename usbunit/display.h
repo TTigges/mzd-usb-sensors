@@ -31,6 +31,11 @@ static const byte x_pos[] = { 1, 65, 1, 65};
 static const byte y_pos[] = { 2,  2, 5,  5};
 
 
+/* SDD1306 and SH1106 are supported 
+ * 0=SH1106, 1=SDD1306
+ */
+#define SDD1306 0 
+
 /* Automatically switch display to next mode after 10 seconds */
 #define DISPLAY_AUTOSWITCH       true
 /* Display mode switch time in units of DISPLAY_UPDATE_msec
@@ -84,7 +89,11 @@ void display_init()
     /* Display found */
     display_present = true;
 
-    display.begin(&Adafruit128x64, DISPLAY_I2C_ADDRESS);
+#ifdef SDD1306
+      display.begin(&Adafruit128x64, DISPLAY_I2C_ADDRESS);
+#else
+      display.begin(&SH1106_128x64, DISPLAY_I2C_ADDRESS);
+#endif
     display.setFont(Adafruit5x7);
     display.clear();
   
