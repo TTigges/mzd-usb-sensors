@@ -38,14 +38,14 @@ CMU                  Microcontroller via USB
 │                    │
 └─ App ─ [usbget] ─ [usbunit]
    │      │          │  (optional:)
-   *.out-files       ├─ CC1101 433 MHz receiver     ─ (OEM) 433 MHz TPMS sensors
-                     ├─ onboard BLE receiver¹       ─ BLE TPMS sensors²
-                     └─ wire connected sensors ────── oil pressure or temperature sensors³
+   *.out-files       ├─ CC1101 433 MHz receiver ─) ) )    ( ( (─ (OEM) 433 MHz TPMS sensors
+                     ├─ onboard BLE receiver¹ ───) ) )    ( ( (─ BLE TPMS sensors²
+                     └─ wire connected sensors ───────────────── oil pressure or temperature sensors³
 
 ```
 
-¹ RedBear Duo (OOP*) is supported, for other boards or BLE receivers the code needs to be changed and adapted in order to be supported.
-² depending on the BLE protocol and the decoding of the signal, the necessary code in usbunit needs to be changed and adapted.
+¹ RedBear Duo (OOP*) is supported, for other boards or BLE receivers the code needs to be changed and adapted in order to be supported.  
+² depending on the BLE protocol and the decoding of the signal, the necessary code in usbunit needs to be changed and adapted.  
 ³ depending on the sensor, the calculation of the incoming signal needs to be changed and adapted.
 
 
