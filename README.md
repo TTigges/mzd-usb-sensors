@@ -5,7 +5,7 @@ Enables additional custom apps on MZD CMU to receive data from external sensors 
 This README is not final.
 
 
-## Files structure:
+### Files structure:
 
 ```
 mzd-usb-sensors
@@ -22,25 +22,25 @@ mzd-usb-sensors
 **To be finished.**
 
 
-## How it works:
+### How it works:
 
 The Speedometer App triggers a shell script (speedometer.sh) that reads data and provides these for the app. We modified the script to run an executable: usbget
 
-__**usbget**__ establishes a serial connection via usb to the connected microcontroller board. usbget can query data but also send data. For more information, see the readme for usbget.
+**_usbget_** establishes a serial connection via usb to the connected microcontroller board. usbget can query data but also send data. For more information, see the readme for usbget.
 
-__**usbunit**__ is the board side code that allows the microcontroller to handle the queries. The 433 MHz receiver and oil sensors are connected to the microcontroller board. The RedBear Duo (OOP*) is also supported, which has BLE on board and allowed to receive BLE sensors (valve cover type).
+**_usbunit_** is the board side code that allows the microcontroller to handle the queries. The 433 MHz receiver and oil sensors are connected to the microcontroller board. The RedBear Duo (OOP*) is also supported, which has BLE on board and allowed to receive BLE sensors (valve cover type).
 
 
-## Schematic:
+### Schematic:
 
 ```
-CMU                  Microcontroller via USB
-│                    │
-└─ App ─ [usbget] ─ [usbunit]
-   │      │          │  (optional:)
-   *.out-files       ├─ CC1101 433 MHz receiver ─) ) )    ( ( (─ (OEM) 433 MHz TPMS sensors
-                     ├─ onboard BLE receiver¹ ───) ) )    ( ( (─ BLE TPMS sensors²
-                     └─ wire connected sensors ───────────────── oil pressure or temperature sensors³
+CMU                     Microcontroller via USB
+│                       │
+└─ App ──── [usbget] ─ [usbunit]
+   │         │          │  (optional:)
+   *.out-files          ├─ CC1101 433 MHz receiver ─) ) )    ( ( (─ (OEM) 433 MHz TPMS sensors
+                        ├─ onboard BLE receiver¹ ───) ) )    ( ( (─ BLE TPMS sensors²
+                        └─ wire connected sensors ───────────────── oil pressure or temperature sensors³
 
 ```
 
@@ -49,13 +49,13 @@ CMU                  Microcontroller via USB
 ³ depending on the sensor, the calculation of the incoming signal needs to be changed and adapted.
 
 
-## Supported Oil Sensors:
+### Supported Oil Sensors:
 
 - Pressure sensor:    Prosport PSSMOPS-PK
 - Temperature sensor: Prosport PSOWTS-JPNWP
 
 
-## \* BLE – or: If your car does not have TPMS sensors but you want TPMS data:
+### \* BLE – or: If your car does not have TPMS sensors but you want TPMS data:
 
 We started with BLE sensors (valve cover type) and decoded the received signals. Depending on the sensors you get, you might have to entirely start from scratch, decoding the signals. We also had issues receiving all four sensors, even with an external antenna installed.
 
@@ -64,7 +64,7 @@ The supported RedBear Duo board is also unfortunately out of production. I have 
 For now, we suggest to install TPMS sensors (valve stem type), VDO Type TG1C or compatible 3rd party sensors, even if your car does not have/need active TPMS sensors.
 
 
-## 433 MHz vs 315 MHz, Europa/ROTW vs US:
+### 433 MHz vs 315 MHz, Europa/ROTW vs US:
 
 In Europe and the rest of the world, 433 MHz sensors are used for active TPMS while in the USA, 315 MHz is used. For now, mzd-usb-sensors supports 433 MHz signals via the CC1101 receiver. Supporting 315 MHz sensors is something we might want to look into => **TBD**
 
