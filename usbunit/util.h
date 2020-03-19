@@ -47,6 +47,7 @@ typedef struct statistics_t {
   unsigned long data_available;
   unsigned int carrier_len;
   unsigned int max_timings;
+  unsigned int bit_errors;
   unsigned int preamble_found;
   unsigned int checksum_ok;
   unsigned int checksum_fails;
@@ -71,6 +72,8 @@ void dump_statistics()
   Serial.println(statistics.data_available);
   Serial.print(F("+max timings = "));
   Serial.println(statistics.max_timings);
+  Serial.print(F("+bit errors  = "));
+  Serial.println(statistics.bit_errors);
   Serial.print(F("+preamble ok = "));
   Serial.println(statistics.preamble_found);
   Serial.print(F("+cksum ok    = "));

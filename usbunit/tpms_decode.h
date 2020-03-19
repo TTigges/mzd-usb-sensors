@@ -45,9 +45,9 @@ typedef struct byteArray_t {
 #define MIN_LONG_usec    ((byte) 80)
 
 /* Pulse type */
-#define INVALID ((byte)0)
-#define SHORT   ((byte)1)
-#define LONG    ((byte)2)
+#define INVALID_PULSE ((byte)0)
+#define SHORT_PULSE   ((byte)1)
+#define LONG_PULSE    ((byte)2)
 
 
 /***************** forward defines **********************/
@@ -241,14 +241,14 @@ void append_byte( byteArray_t *data, byte value)
 byte pulse_type( byte time_usec)
 {
     if( time_usec < MIN_SHORT_usec) {
-        return INVALID;
+        return INVALID_PULSE;
     }
 
     if( time_usec < MIN_LONG_usec) {
-        return SHORT;
+        return SHORT_PULSE;
     }
 
-    return LONG;
+    return LONG_PULSE;
 }
 
 /********************************************************/
@@ -277,11 +277,11 @@ void bit_decode( volatile byte timing[], unsigned int count, bool start_value,  
         timing_len_usec += timing[timing_idx];
         
         switch( pulse_type( timing[timing_idx] ) ) {
-        case LONG: /* 2 pulses */
+        case LONG_PULSE: /* 2 pulses */
             set_bit( bits, bit_count++, level);
             /* Fall through */
 
-        case SHORT: /* 1 pulse */
+        case SHORT_PULSE: /* 1 pulse */
             set_bit( bits, bit_count++, level);
             break;
         }

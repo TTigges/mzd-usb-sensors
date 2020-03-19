@@ -61,7 +61,8 @@ byte display_mode = DISPLAYMODE_SETUP;
 bool display_present = false;
 byte last_display_mode = display_mode;
 byte change = 0;
-unsigned long last_update = 0;
+unsigned long last_update = 0;      // Last display update time
+unsigned long sensor_update_ts = 0; // Last time a sensor was updated
 
 SSD1306AsciiWire display;
 
@@ -71,6 +72,7 @@ SSD1306AsciiWire display;
 void update_display(tpms433_sensor_t sensor[], bool full);
 
 void show_title();
+void show_last_update();
 void display_setup( tpms433_sensor_t sensor[], bool full);
 void display_temperature( tpms433_sensor_t sensor[], bool full);
 void display_pressure( tpms433_sensor_t sensor[], bool full);
@@ -146,8 +148,18 @@ void show_title()
   display.setFont(Adafruit5x7);
   display.set1X();             // Normal 1:1 pixel scale
   display.setCursor(0, 0);
-  display.println(" Abarth TPMS Monitor");
-  display.println("   (TWJ Solutions)");
+  display.print(" Abarth TPMS Monitor");
+}
+
+void show_last_update()
+{
+  display.setFont(Adafruit5x7);
+  display.set1X();             // Normal 1:1 pixel scale
+  display.setCursor( 0, 1);
+  display.print( "Last update");
+  display.clear( 72, 127, 1, 1);
+  display.print( (millis() - sensor_update_ts) / 1000);
+  display.print( " sec");
 }
 
 void update_display( tpms433_sensor_t sensor[], bool full)
@@ -156,14 +168,17 @@ void update_display( tpms433_sensor_t sensor[], bool full)
   {
   case DISPLAYMODE_SETUP:
     display_setup( sensor, full);
+    show_last_update();
     break;
     
   case DISPLAYMODE_TEMPERATURE:
     display_temperature( sensor, full);
+    show_last_update();
     break;
     
   case DISPLAYMODE_PRESSURE:
     display_pressure( sensor, full);
+    show_last_update();
     break;
 
   case DISPLAYMODE_STATISTICS1:
@@ -189,6 +204,10 @@ void display_setup(tpms433_sensor_t sensor[], bool full)
   for (i = 0; i < 4; i++)
   {
     if( full || sensor[i].last_update >= last_update) {
+
+      if( sensor_update_ts == 0 || sensor_update_ts < sensor[i].last_update) {
+        sensor_update_ts = sensor[i].last_update;
+      }
       
       x = x_pos[i];
       y = y_pos[i];
@@ -222,7 +241,11 @@ void display_temperature(tpms433_sensor_t sensor[], bool full)
   for (i = 0; i < 4; i++)
   {
     if( full || sensor[i].last_update >= last_update) {
-      
+
+      if( sensor_update_ts == 0 || sensor_update_ts < sensor[i].last_update) {
+        sensor_update_ts = sensor[i].last_update;
+      }
+
       x = x_pos[i];
       y = y_pos[i];
   
@@ -259,6 +282,10 @@ void display_pressure(tpms433_sensor_t sensor[], bool full)
   for (i = 0; i < 4; i++)
   {
     if( full || sensor[i].last_update >= last_update) {
+
+      if( sensor_update_ts == 0 || sensor_update_ts < sensor[i].last_update) {
+        sensor_update_ts = sensor[i].last_update;
+      }
 
       x = x_pos[i];
       y = y_pos[i];
@@ -335,20 +362,24 @@ void display_statistics2( bool full)
     display.setCursor(0, 2);
     display.print(F("max timings"));
     display.setCursor(0, 3);
-    display.print(F("preamble ok"));
+    display.print(F("bit errors"));
     display.setCursor(0, 4);
+    display.print(F("preamble ok"));
+    display.setCursor(0, 5);    
     display.print(F("cksum ok"));
-    display.setCursor(0, 5);
+    display.setCursor(0, 6);
     display.print(F("cksum fails"));
   }
 
   display.setCursor(72, 2);
   display.print(statistics.max_timings);
   display.setCursor(72, 3);
-  display.print(statistics.preamble_found);
+  display.print(statistics.bit_errors);
   display.setCursor(72, 4);
-  display.print(statistics.checksum_ok);
+  display.print(statistics.preamble_found);
   display.setCursor(72, 5);
+  display.print(statistics.checksum_ok);
+  display.setCursor(72, 6);
   display.print(statistics.checksum_fails);
 }
 

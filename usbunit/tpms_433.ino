@@ -86,13 +86,12 @@ void Tpms433::timeout()
   {
     /* Returns true is decoding went fine and checksum was ok. */
 
-    if( decode_tpms( timings, timings_len, first_edge_state, &data)) {
+    if( decode_tpms( timings, timings_count, first_edge_state, &data)) {
 
       /* We can enable receiver state here because the timings buffer
        * is not used anymore.
        */
-      init_buffer();
-      receiver_state = STATE_IDLE;
+      init_receiver();
 
       id = find_sensor( &data);
       
@@ -112,8 +111,7 @@ void Tpms433::timeout()
         sort_sensors( id);
       }
     } else {
-      init_buffer();
-      receiver_state = STATE_IDLE;
+      init_receiver();
     }
   }
 }

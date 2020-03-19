@@ -21,13 +21,15 @@ SPIClass spi;
  *     |         (carrier lost)      |
  *     V                             |
  *   IDLE >------ CDintr ----> CARRIER_DETECTED
- *     ^    (carrier detected)       |
- *     |                             |
- *     |                             |
- *   loop()                       EdgeIntr
- *  processing                       |
- *     |                             |
- *     |                             V
+ *     ^ ^  (carrier detected)       |
+ *     |  \                          |
+ *     |    \                        |
+ *     |      \                      |
+ *   loop()     \ receive         EdgeIntr
+ *  processing     error  \          |
+ *     |                    \        |
+ *     |                      \      |
+ *     |                        \    V
  *   DATA <------ CDintr ------< RECEIVING >--+
  * AVAILABLE   (carrier lost)        ^        |
  *                                   |     EdgeIntr
@@ -46,18 +48,21 @@ static volatile bool first_edge_state = LOW;
 
 #define CC1101_MAX_TIMINGS   255
 volatile byte timings[CC1101_MAX_TIMINGS];
-volatile byte timings_len = 0;
+volatile byte timings_count = 0;
 
-volatile static unsigned long LastEdgeTime_us = 0;
+volatile static unsigned long last_edge_time_usec = 0;
+
+#define MIN_BIT_LEN_usec    MIN_SHORT_usec
 
 /* Range of valid carrier length */
-#define CARRIER_MIN_LEN_usec    9600
+#define CARRIER_MIN_LEN_usec    9500
 #define CARRIER_MAX_LEN_usec   10500
 unsigned long carrier_len_usec;
 
-void init_buffer()
+void init_receiver()
 {
-  timings_len = 0;
+  timings_count = 0;
+  receiver_state = STATE_IDLE;
 }
 
 /* **********************************  interrupt handler   ******************************* */
@@ -65,7 +70,7 @@ void init_buffer()
 void edge_interrupt()
 {
   unsigned long ts = micros();
-  unsigned long bit_width;
+  unsigned long bit_len_usec;
 
   statistics.data_interrupts++;
   
@@ -83,23 +88,32 @@ void edge_interrupt()
 
     case STATE_RECEIVING:
 
-      if (timings_len >= CC1101_MAX_TIMINGS)
+      if (timings_count >= CC1101_MAX_TIMINGS)
       {//buffer full - don't accpet anymore
-        return;
+        break;
       }
 
-      bit_width = ts - LastEdgeTime_us;
-      LastEdgeTime_us = ts;
+      bit_len_usec = ts - last_edge_time_usec;
+      last_edge_time_usec = ts;
 
-      if (bit_width <= 10)  //ignore glitches
-      {
-        return;
+      if (bit_len_usec < MIN_BIT_LEN_usec)
+      { /* This is a receive error => restart */
+
+        if( timings_count >= 16)
+        { /* Skip preamble, we want to count data errors only */
+          statistics.bit_errors++;
+        }
+        
+        init_receiver();
+        break;
       }
   
-      if (bit_width > 255)
-        bit_width = 255;
+      if (bit_len_usec > 255)
+      {
+        bit_len_usec = 255;
+      }
 
-      timings[timings_len++] = (byte)bit_width;
+      timings[timings_count++] = (byte)bit_len_usec;
       
       break;
 
@@ -120,7 +134,7 @@ void carrier_sense_interrupt()
   {
     case STATE_IDLE:
       if( carrier == HIGH) {
-        carrier_len_usec = LastEdgeTime_us = ts;
+        carrier_len_usec = last_edge_time_usec = ts;
         receiver_state = STATE_CARRIER_DETECTED;
         statistics.carrier_detected++;
       }
@@ -132,8 +146,7 @@ void carrier_sense_interrupt()
         if( carrier_len_usec > statistics.carrier_len) {
           statistics.carrier_len = carrier_len_usec;
         }
-        receiver_state = STATE_IDLE;
-        timings_len = 0;
+        init_receiver();
       }
       break;
 
@@ -149,8 +162,7 @@ void carrier_sense_interrupt()
           receiver_state = STATE_DATA_AVAILABLE;
           statistics.data_available++; 
         } else {
-          receiver_state = STATE_IDLE;
-          timings_len = 0;
+          init_receiver();
         }
       }
       break;
@@ -230,10 +242,8 @@ void CC1101::reset()
 
   setIdleState();
 
-  init_buffer();
+  init_receiver();
   clear_statistics();
-  
-  receiver_state = STATE_IDLE;
 
   attachInterrupt( digitalPinToInterrupt(CC1101_RXPin), edge_interrupt, CHANGE);
   // attachInterrupt( digitalPinToInterrupt(CC1101_CDPin), carrier_sense_interrupt, CHANGE);
