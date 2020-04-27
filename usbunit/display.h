@@ -32,9 +32,9 @@ static const byte y_pos[] = { 2,  2, 5,  5};
 
 
 /* SDD1306 and SH1106 are supported 
- * 0=SH1106, 1=SDD1306
+ * disbled=SH1106, enabled=SDD1306
  */
-#define SDD1306 0 
+/* #define SDD1306 1 */
 
 /* Automatically switch display to next mode after 10 seconds */
 #define DISPLAY_AUTOSWITCH       true
