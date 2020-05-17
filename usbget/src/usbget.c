@@ -65,6 +65,7 @@
  *
  * File History
  * ============
+ *   wolfix      17-May-2020  (0.2.1) Updated release. libUSB timeout issue
  *   TTigges     12-Mar-2020  (0.2.0) <= Release, no changes. Tested and approved; In use in 124 Spider.
  *   wolfix      29-Feb-2020  (0.1.3) Support default device
  *   wolfix      26-Jan-2020  (0.1.2) CH240 support
@@ -87,7 +88,7 @@
 #include <unistd.h>
 
 
-static const char* VERSION = "0.2.0";
+static const char* VERSION = "0.2.1";
 
 
 

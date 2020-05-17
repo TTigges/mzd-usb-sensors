@@ -1,6 +1,6 @@
 --- usage ---
 
-usbget 0.2.0
+usbget 0.2.1
 
  usage: usbget \[options\] \[command ... \] 
 
@@ -35,8 +35,9 @@ No suitable USB device found.
 TPMS
 OIL
 RGB
+DISP
 --- info ---
-version     = 0.2.1
+version     = 0.2.2
 simulate    = false
 cs intr.    = \d+
 data intr.  = \d+
@@ -50,6 +51,10 @@ cksum ok    = \d+
 cksum fails = \d+
 memory      = \d+/\d+
 --- config ---
+0=[0-9a-f]+
+1=[0-9a-f]+
+2=[0-9a-f]+
+3=[0-9a-f]+
 0 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
 1 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+
 2 ID=[0-9a-f]+ T=\d+.0 P=\d+.\d+ S=\d+

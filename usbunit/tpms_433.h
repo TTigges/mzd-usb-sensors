@@ -76,6 +76,7 @@ class Tpms433 : public Action {
     bool match_id( byte id, byteArray_t *data);
     bool is_empty( byte id);
     bool empty_config();
+    void force_update();
     void copy_sensor( tpms433_sensor_t *t, tpms433_sensor_t *s);
     void set_sensor_IDs_from_config();
     void sort_sensors( byte top);

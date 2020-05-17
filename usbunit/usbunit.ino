@@ -15,7 +15,7 @@
 #include "rgb_analog.h"
 #include "ws2801.h"
 
-String versionInfo = "0.2.1";
+String versionInfo = "0.2.2";
 
 #include "display.h"
 
@@ -117,16 +117,13 @@ void setup() {
     ;
   }
 
-#ifdef DISPLAY_SUPPORT
-  display_init();
-#endif
-
   /* Register all supported actions.
    * There is a limit of supported action.
    * If you need more that 6 supported actions
    * increase MAX_ACTIONS in action.h
    * 
    */
+
 #ifdef TPMS_BLE_SUPPORT
   addAction( new TpmsBLE);
 #endif
@@ -142,7 +139,11 @@ void setup() {
 #ifdef WS2801_SUPPORT
   addAction( new WS2801);
 #endif
-  
+
+  #ifdef DISPLAY_SUPPORT
+  addAction( new Display);
+#endif
+
   setupActions();
 
   blinkLed( 500, 1);
@@ -184,10 +185,6 @@ void loop() {
   case NO_COMMAND:
     /* Timeout 10 msec */
     runTimeout();
-#ifdef DISPLAY_SUPPORT
-    display_handler();
-#endif
-
     break;
 
   default:

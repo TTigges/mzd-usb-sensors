@@ -26,9 +26,12 @@ mzd-usb-sensors
 
 The Speedometer App triggers a shell script (speedometer.sh) that reads data and provides these for the app. We modified the script to run an executable: usbget
 
-**_usbget_** establishes a serial connection via usb to the connected microcontroller board. usbget can query data but also send data. For more information, see the readme for usbget.
+[**_usbget_**](usbget/Readme.md) establishes a serial connection via usb to the connected microcontroller board. usbget can query data but also send data. For more information, see the readme for usbget.
 
 **_usbunit_** is the board side code that allows the microcontroller to handle the queries. The 433 MHz receiver and oil sensors are connected to the microcontroller board. The RedBear Duo (OOP*) is also supported, which has BLE on board and allowed to receive BLE sensors (valve cover type).
+
+[**_modules_**](usbget/doc/module.md) are pieces of code runnung on the USBUNIT to provide that actual funcionality.
+There are modules available to access TPMS data as well as oil pressure and temperature.
 
 
 ### Schematic:
