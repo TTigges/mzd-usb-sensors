@@ -99,6 +99,10 @@ void Tpms433::timeout()
       if( id >= 0) {
         sensor[id].press_bar = (float)data.bytes[5] * 1.38 / 100; //pressure in bar
         sensor[id].temp_c    = (float)data.bytes[6] - 50;
+        /*
+         * The last_update timestamp is used by the display to determine 
+         * whether or not to update the display for that particular sensor.
+         */
         sensor[id].last_update = now;
 
         if( sensor[id].score >= TPMS_433_SCORE_MAX - TPMS_433_SCORE_ADD) {
@@ -174,8 +178,6 @@ void Tpms433::sendData()
   sendMoreDataStart();
   
   for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
-    // id2hex( sensor[i].sensorId, hexstr );
-    // hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
     
     Serial.print(i);
     Serial.print(F(": "));
@@ -200,23 +202,29 @@ void Tpms433::sendConfig()
 {
   char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
 
+  for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
+    id2hex( tpms433Config.sensorId[i], hexstr );
+    hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
+    
+    sendMoreDataStart();
+    Serial.print(i);
+    Serial.print(F("="));
+    Serial.print(hexstr);
+    sendMoreDataEnd();
+  }
+
   for( byte i = 0; i < TPMS_433_NUM_SENSORS + TPMS_433_EXTRA_SENSORS; i++) {
-    //id2hex( tpms433Config.sensorId[i], hexstr );
     id2hex( sensor[i].sensorId, hexstr );
     hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
     
     sendMoreDataStart();
     Serial.print(i);
-    //Serial.print(F("="));
-    //Serial.print(hexstr);
     Serial.print(F(" ID="));
     Serial.print(hexstr);
     Serial.print(F(" T="));
     Serial.print(sensor[i].temp_c,1);
     Serial.print(F(" P="));
     Serial.print(sensor[i].press_bar,2);
-    //Serial.print(F(" U="));
-    //Serial.print(sensor[i].lastupdated);
     Serial.print(F(" S="));
     Serial.print(sensor[i].score);
     sendMoreDataEnd();
@@ -418,6 +426,19 @@ bool Tpms433::empty_config()
   return true;
 }
 
+/* 
+ * Set last_update for all sensors to current time.
+ * This forces a display update in the next cycle.
+ */
+void Tpms433::force_update()
+{
+  unsigned long now = millis();
+
+  for( byte id = 0; id < TPMS_433_NUM_SENSORS; id++) {
+    sensor[id].last_update = now;
+  }
+}
+
 /*
  * Copy sensor s(ource) to t(arget)
  */
@@ -451,37 +472,47 @@ void Tpms433::set_sensor_IDs_from_config()
   }
 }
 
-void Tpms433::sort_sensors( byte top)
+void Tpms433::sort_sensors( byte bottom)
 {
   tpms433_sensor_t temp;
   byte id;
   byte score;
 
-  /* Where to start sorting */
-  byte bottom = empty_config() ? 0 : TPMS_433_NUM_SENSORS;
-  byte pos = bottom;
+  /* Where to start sorting
+   *  
+   * If the configuration is not empty the first 4 sensors are fixed in position.
+   * There is not need to sort them, so we start after the configured sensors.
+   */
+  byte top = empty_config() ? 0 : TPMS_433_NUM_SENSORS;
+  byte pos = top;
   
   /* A new identified sensor always replaces the sensor with highest slot id.
    * We simply need to move this sensor up to the right place.
    */
-  score = sensor[top].score;
+  score = sensor[bottom].score;
   
-  for( id = top; id > bottom; id--) {
+  for( id = bottom; id > top; id--) {
     if( sensor[id-1].score > score) {
       pos = id;
       break; 
     }
   }
 
-  if( pos < top) {
-    /* Move all sensors from top to pos down one slot. */
-    copy_sensor( &temp, &sensor[ top]);
+  if( pos < bottom) {
+    /* Move all sensors from pos to bottom down one slot. */
+    copy_sensor( &temp, &sensor[ bottom]);
 
-    for( id = top; id > pos; id--) {
+    for( id = bottom; id > pos; id--) {
       copy_sensor( &sensor[id], &sensor[id-1]);
     }
 
     copy_sensor( &sensor[pos], &temp);
+
+    if( pos < TPMS_433_NUM_SENSORS) {
+      /* The position of at least one of the sensors that are displayed has changed.
+       */
+      force_update();
+    }
   }
 }
 

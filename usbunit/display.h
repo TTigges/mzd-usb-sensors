@@ -4,383 +4,106 @@
 
 #ifdef DISPLAY_SUPPORT
 
-#include "SSD1306Ascii.h"
-#include "SSD1306AsciiWire.h"
+/***************/
 
-/* Display positions:
- *
- * For single height characters ( display.set1X() )
- * Display: 128x64 pixel
- * Font   : 5x7 pixel  (6x8 including gap)
- * 
- * 8 Lines, 21 characters
- * 
- *    Y (pixel)
- *    0 ............... 127
- * X 0
- *   1
- *   2
- *   3
- *   4
- *   5
- *   6
- *   7
- * 
- */
-static const byte x_pos[] = { 1, 65, 1, 65};
-static const byte y_pos[] = { 2,  2, 5,  5};
+#define DISPLAY_DEVICE_SH1106       0
+#define DISPLAY_DEVICE_SDD1306      1
+#define DISPLAY_DEVICE_MAX          1
 
+#define DISPLAY_DEFAULT_DEVICE    DISPLAY_DEVICE_SH1106
 
+<<<<<<< HEAD
 /* SDD1306 and SH1106 are supported 
  * disbled=SH1106, enabled=SDD1306
  */
 /* #define SDD1306 1 */
+=======
+/***************/
+>>>>>>> 44d0b77f31d3164d4bf339e61963b12ab241526b
 
-/* Automatically switch display to next mode after 10 seconds */
-#define DISPLAY_AUTOSWITCH       true
+/* Only display the screen defined in displayConfig.display_screen */
+#define DISPLAY_MODE_SINGLE         0
+/* Automatically toggle between two screens */
+#define DISPLAY_MODE_AUTOSWITCH     1
+/* Automatically switch to next screen, cycling through all screens */
+#define DISPLAY_MODE_ALL            2
+#define DISPLAY_MODE_MAX            2
+
+#define DISPLAY_DEFAULT_MODE      DISPLAY_MODE_AUTOSWITCH
+
+/* Display update frequency in msec. */
+#define DISPLAY_UPDATE_msec       500
+
 /* Display mode switch time in units of DISPLAY_UPDATE_msec
  *  20 x 500 msec = 10 sec
  */
-#define DISPLAY_SWITCHTIME       20
+#define DISPLAY_SWITCHTIME         20
+
+/****************/
+
+#define DISPLAY_SCREEN_PRESSURE     0 // displays pressure (large) and temperatur (small)
+#define DISPLAY_SCREEN_TEMPERATURE  1 // displays temperature (large) and pressure (small)
+#define DISPLAY_SCREEN_SETUP        2 // displays pressure (large) and ID (small)
+#define DISPLAY_SCREEN_STATISTICS1  3
+#define DISPLAY_SCREEN_STATISTICS2  4
+#define DISPLAY_SCREEN_MAX          4
+
+#define DISPLAY_DEFAULT_SCREEN     DISPLAY_SCREEN_SETUP
+
+/****************/
+
+#define DISPLAY_DEFAULT_LAST_UPD_sec  15 // Display last update indicator if time > this
 
 
-/* Display update frequency in msec. */
-#define DISPLAY_UPDATE_msec      500
-
-#define DISPLAYMODE_SETUP        0 //displays pressure (large) and ID (small)
-#define DISPLAYMODE_TEMPERATURE  1 //displays temperature (large) and pressure (small)
-#define DISPLAYMODE_PRESSURE     2 //displays pressure (large) and temperatur (small)
-#define DISPLAYMODE_STATISTICS1  3
-#define DISPLAYMODE_STATISTICS2  4
-
-/* Initial display mode */
-byte display_mode = DISPLAYMODE_SETUP;
-//byte display_mode = DISPLAYMODE_TEMPERATURE;
-//byte display_mode = DISPLAYMODE_PRESSURE;
-
-bool display_present = false;
-byte last_display_mode = display_mode;
-byte change = 0;
-unsigned long last_update = 0;      // Last display update time
-unsigned long sensor_update_ts = 0; // Last time a sensor was updated
-
-SSD1306AsciiWire display;
-
-
-/* ********** forward declarations ********** */
-
-void update_display(tpms433_sensor_t sensor[], bool full);
-
-void show_title();
-void show_last_update();
-void display_setup( tpms433_sensor_t sensor[], bool full);
-void display_temperature( tpms433_sensor_t sensor[], bool full);
-void display_pressure( tpms433_sensor_t sensor[], bool full);
-void display_statistics1( bool full);
-void display_statistics2( bool full);
-
-
-void display_init()
-{
-  Wire.begin();
-  Wire.setClock(400000L);
-
-  Wire.beginTransmission( DISPLAY_I2C_ADDRESS);
-  if (Wire.endTransmission() == 0) {
-    
-    /* Display found */
-    display_present = true;
-
-#ifdef SDD1306
-      display.begin(&Adafruit128x64, DISPLAY_I2C_ADDRESS);
-#else
-      display.begin(&SH1106_128x64, DISPLAY_I2C_ADDRESS);
-#endif
-    display.setFont(Adafruit5x7);
-    display.clear();
-  
-    show_title();
-  }
-}
-
-/* This is called every 10 msec.
- *
- * This is the only function called from outside world to control the display.
+/*
+ * Configuration structure stored in EEPROM.
+ * It holds the sensor IDs for all 4 tires.
  */
-void display_handler()
-{
-  unsigned long now = millis();
-  bool full_refresh = false;
+typedef struct display_config_t {
 
-  if( !display_present) {
-    return;
-  }
+  byte mode;
+  byte screen;
+  byte device;
+  unsigned int last_indicator;
 
-  if( now >= last_update + DISPLAY_UPDATE_msec) {
+  checksum_t checksum;
 
-    if( DISPLAY_AUTOSWITCH ) {
-      change++;
-      if( change > DISPLAY_SWITCHTIME) {
-        change = 0;
-        display_mode++;
-        if( display_mode > 4) {
-          display_mode=0;
-        }
-      }
-    }
+} display_config_t;
+
+
+class Display : public Action {
+
+  private:
+    unsigned int configLocation;
+    display_config_t displayConfig;
     
-    if( display_mode != last_display_mode)
-    {
-      display.clear();
-      last_display_mode = display_mode;
-      full_refresh = true;
-    }
-    
-    update_display( tpmsReceiver.getSensors(), full_refresh);
-    
-    /* Update last_update last because it is used in update_display() */
-    last_update = now;
-  }
-}
+    bool display_present = false;
+    byte current_screen = DISPLAY_DEFAULT_SCREEN;
+    byte last_screen = 255;
+    byte change = 0;
+    unsigned int last_disp = 0;
+    unsigned long last_update = 0;      // Last display update time
+    unsigned long sensor_update_ts = 0; // Last time a sensor was updated
 
-void show_title()
-{
-  display.setFont(Adafruit5x7);
-  display.set1X();             // Normal 1:1 pixel scale
-  display.setCursor(0, 0);
-  display.print(" Abarth TPMS Monitor");
-}
+  public:
+    size_t setup(unsigned int eepromLocation);
+    const char *getName();
+    void timeout();
+    void getData();
+    void sendData();
+    void sendConfig();
+    void setConfig();
 
-void show_last_update()
-{
-  display.setFont(Adafruit5x7);
-  display.set1X();             // Normal 1:1 pixel scale
-  display.setCursor( 0, 1);
-  display.print( "Last update");
-  display.clear( 72, 127, 1, 1);
-  display.print( (millis() - sensor_update_ts) / 1000);
-  display.print( " sec");
-}
+  private:
+    void show_title();
+    void show_last_update();
+    void update_display( tpms433_sensor_t sensor[], bool full);
+    void display_setup(tpms433_sensor_t sensor[], bool full);
+    void display_temperature(tpms433_sensor_t sensor[], bool full);
+    void display_pressure(tpms433_sensor_t sensor[], bool full);
+    void display_statistics1( bool full);
+    void display_statistics2( bool full);
 
-void update_display( tpms433_sensor_t sensor[], bool full)
-{
-  switch( display_mode)
-  {
-  case DISPLAYMODE_SETUP:
-    display_setup( sensor, full);
-    show_last_update();
-    break;
-    
-  case DISPLAYMODE_TEMPERATURE:
-    display_temperature( sensor, full);
-    show_last_update();
-    break;
-    
-  case DISPLAYMODE_PRESSURE:
-    display_pressure( sensor, full);
-    show_last_update();
-    break;
-
-  case DISPLAYMODE_STATISTICS1:
-    display_statistics1( full);
-    break;
-
-  case DISPLAYMODE_STATISTICS2:
-    display_statistics2( full);
-    break;
-  }
-}
-
-void display_setup(tpms433_sensor_t sensor[], bool full)
-{
-  byte i;
-  int x;
-  int y;
-  char s[6];
-  char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
-  
-  if( full) show_title();
-  
-  for (i = 0; i < 4; i++)
-  {
-    if( full || sensor[i].last_update >= last_update) {
-
-      if( sensor_update_ts == 0 || sensor_update_ts < sensor[i].last_update) {
-        sensor_update_ts = sensor[i].last_update;
-      }
-      
-      x = x_pos[i];
-      y = y_pos[i];
-
-      display.setFont(Adafruit5x7);
-      display.set2X();
-      display.clear(x, x+62, y, y+1);
-
-      dtostrf(sensor[i].press_bar, 3, 2, s);
-      display.print(s);
-
-      display.set1X();
-      display.clear(x, x+62, y+2, y+2);
-    
-      Tpms433::id2hex( sensor[i].sensorId, hexstr );   
-      hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
-      display.print(hexstr);
-    }
-  }
-}
-
-void display_temperature(tpms433_sensor_t sensor[], bool full)
-{
-  byte i;
-  int x;
-  int y;
-  char s[6];
-
-  if( full) show_title();
-  
-  for (i = 0; i < 4; i++)
-  {
-    if( full || sensor[i].last_update >= last_update) {
-
-      if( sensor_update_ts == 0 || sensor_update_ts < sensor[i].last_update) {
-        sensor_update_ts = sensor[i].last_update;
-      }
-
-      x = x_pos[i];
-      y = y_pos[i];
-  
-      display.setFont(Adafruit5x7);
-      display.set2X();
-      display.clear(x, x+62, y, y+1);
-      
-      dtostrf(sensor[i].temp_c, 2, 0, s);
-      display.print(" ");
-      display.print(s);      
-      display.setFont(System5x7);
-      display.print(char(128));  //degrees symbol
-      display.setFont(Adafruit5x7);
-      display.print("C");
-
-      display.set1X();
-      display.clear(x, x+62, y+2, y+2);
-
-      dtostrf(sensor[i].press_bar, 3, 2, s);
-      display.print(s);
-    }
-  }
-}
-
-void display_pressure(tpms433_sensor_t sensor[], bool full)
-{
-  byte i;
-  int x;
-  int y;
-  char s[6];
-  
-  if( full) show_title();
-  
-  for (i = 0; i < 4; i++)
-  {
-    if( full || sensor[i].last_update >= last_update) {
-
-      if( sensor_update_ts == 0 || sensor_update_ts < sensor[i].last_update) {
-        sensor_update_ts = sensor[i].last_update;
-      }
-
-      x = x_pos[i];
-      y = y_pos[i];
- 
-      display.setFont(Adafruit5x7);
-      display.set2X();      
-      display.clear(x, x+62, y, y+1);
-
-      dtostrf(sensor[i].press_bar, 3, 2, s);
-      display.print(s);
-
-      display.set1X();
-      display.clear(x, x+62, y+2, y+2);
- 
-      dtostrf(sensor[i].temp_c, 2, 0, s);
-      display.print(" ");
-      display.print(s);
-      
-      display.setFont(System5x7);
-      display.print(char(128));  //degrees symbol
-      
-      display.setFont(Adafruit5x7);
-      display.print("C");
-    }
-  }
-}
-
-void display_statistics1( bool full)
-{
-  display.setFont(Adafruit5x7);
-  display.set1X();
-
-  if( full) {
-    display.setCursor(0, 0);
-    display.print(F("Statistics"));
-
-    display.setCursor(0, 2);
-    display.print(F("version"));
-    display.setCursor(0, 3);
-    display.print(F("cs intr."));
-    display.setCursor(0, 4);
-    display.print(F("data intr."));
-    display.setCursor(0, 5);
-    display.print(F("max carr us"));
-    display.setCursor(0, 6);
-    display.print(F("carr detect"));
-    display.setCursor(0, 7);
-    display.print(F("data avail."));
-  }
-
-  display.setCursor(72, 2);
-  display.print(versionInfo);
-  display.setCursor(72, 3);
-  display.print(statistics.cs_interrupts);
-  display.setCursor(72, 4);
-  display.print(statistics.data_interrupts);
-  display.setCursor(72, 5);
-  display.print(statistics.carrier_len);  
-  display.setCursor(72, 6);
-  display.print(statistics.carrier_detected);
-  display.setCursor(72, 7);
-  display.print(statistics.data_available);
-}
-
-void display_statistics2( bool full)
-{
-  display.setFont(Adafruit5x7);
-  display.set1X();
-
-  if( full) {
-    display.setCursor(0, 0);
-    display.print(F("Statistics"));
-
-    display.setCursor(0, 2);
-    display.print(F("max timings"));
-    display.setCursor(0, 3);
-    display.print(F("bit errors"));
-    display.setCursor(0, 4);
-    display.print(F("preamble ok"));
-    display.setCursor(0, 5);    
-    display.print(F("cksum ok"));
-    display.setCursor(0, 6);
-    display.print(F("cksum fails"));
-  }
-
-  display.setCursor(72, 2);
-  display.print(statistics.max_timings);
-  display.setCursor(72, 3);
-  display.print(statistics.bit_errors);
-  display.setCursor(72, 4);
-  display.print(statistics.preamble_found);
-  display.setCursor(72, 5);
-  display.print(statistics.checksum_ok);
-  display.setCursor(72, 6);
-  display.print(statistics.checksum_fails);
-}
+};
 
 #endif

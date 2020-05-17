@@ -5,6 +5,7 @@
  *
  * File History
  * ============
+ *   wolfix      17-May-2020  Fixed libusb timeout issue
  *   wolfix      29-Feb-2020  (0.1.3) Support default device
  *   wolfix      21-Jul-2019  USB device open code.
  *                            usbList() added
@@ -469,9 +470,12 @@ char usbGetChar( usbDevice *device)
                 continue;
             }
             else if (rc < 0) {
+                /* This is actually not an error, so don't log it. */
+                /*
                 printfLog(
                     "Error waiting for USB bulk transfer. rc=%d\n",
                     rc);
+                */
                 break;
             }
 

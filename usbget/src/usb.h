@@ -15,9 +15,9 @@
 #include <libusb.h>
 
 /* USB receive timeout */
-#define COMMAND_TIMEOUT_MSEC   4000
-#define RECEIVE_TIMEOUT_MSEC   1000
-#define TRANSMIT_TIMEOUT_MSEC  4000
+#define COMMAND_TIMEOUT_MSEC   2000
+#define RECEIVE_TIMEOUT_MSEC    500
+#define TRANSMIT_TIMEOUT_MSEC  2000
 
 /* Must be < 16 msec. for FTDI !
  * The FTDI chip sends status bytes every 16 msec. even if there is
