@@ -12,15 +12,6 @@
 
 #define DISPLAY_DEFAULT_DEVICE    DISPLAY_DEVICE_SH1106
 
-<<<<<<< HEAD
-/* SDD1306 and SH1106 are supported 
- * disbled=SH1106, enabled=SDD1306
- */
-/* #define SDD1306 1 */
-=======
-/***************/
->>>>>>> 44d0b77f31d3164d4bf339e61963b12ab241526b
-
 /* Only display the screen defined in displayConfig.display_screen */
 #define DISPLAY_MODE_SINGLE         0
 /* Automatically toggle between two screens */
