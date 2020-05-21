@@ -1,69 +1,68 @@
 # USBGET
 
-USBGET ist ein Werkzeug zum Auslesen und Einstellen der USBUNIT.
+USBGET is a command line tool to query and configure the USBUNIT.
 
-[Kompilieren](#kompilieren)<br>
-[USBGET aufrufen](#usbget-aufrufen)<br>
-[USBGET Hilfe](#hilfe-anzeigen)<br>
-[USB Devices anzeigen](#usb-devices-anzeigen)<br>
-[USBUNIT Statistiken](#interne-informationen-und-statistiken-der-usbunit-anzeigen)<br>
-[USBUNIT Verfügbare Module](#module-der-usbunit-anzeigen)<br>
-[USBUNIT Moduldaten abfragen](#moduldaten-abfragen)<br>
-[USBUNIT Modulkonfiguration](#modulkonfiguration-auslesen-und-einstellen)<br>
+[Compile](#compile)<br>
+[Using USBGET](#using-usbget)<br>
+[USBGET Help](#display-help)<br>
+[List USB devices](#list-usb-devices)<br>
+[USBUNIT statistics](#internal-information-and-statistics)<br>
+[List supported USBUNIT modules](#list-supported-usbunit-modules)<br>
+[Query module data](#query-module-data)<br>
+[Configure a USBUNIT module](#configure-a-usbunit-module)<br>
 
-Konfigurationsdetails für die einzelnen Module: [MODULE](doc/module.md)
+Details of supported modules can be found here: [MODULES](doc/module.md)
 
-## Kompilieren
+## Compile
 
-[Inhalt](#usbget)<br>
+[Index](#usbget)<br>
 
-### Voraussetzungen zum kompilieren (nur unter Linux*):
-a) install build-essentials
-
-b) m3-toolchain/ vom root-Verzeichnis aus clonen:
+### Preconditions to compile USBGET on Linux:
+a) install build-essentials<br>
+b) clone m3-toolchain/ from root directory:
 https://github.com/TTigges/m3-toolchain
-(forked von jmgao/m3-toolchain)
+(forke of jmgao/m3-toolchain)
 
 ```
 usbget
-|-cmu/                 Zielorder für usbget (CMU Version)
+|-cmu/                 Target folder of the usbget executable (CMU version)
 |-doc/                 Documentation
-|-local/               Zielordner für usbget (Linux local Version)
+|-local/               Target folder of the usbget executable (Linux local version)
 |-m3-toolchain/        Compiler toolchain (CMU)
-|-src/                 Quelldateien
-|-test/                Testing
+|-src/                 USBGET source
+|-test/                Testing folder
 |-Makefile
 |-Readme.md
 ```
 
-Zum Übersetzen "make" im Verzeichnis usbget aufrufen.
+To compile USBGET run "make" in the usbget folder. This compiles both, the CMU and the local version.
 
-Der Ordner cmu enthält danach die ausführbare Datei für die CMU.
-Der Ordner local enthält danach die auführbare Datei die auf dem lokalen Linux läuft.
+Folder cmu contains the executable for the CMU.
+The local folder contains the executable runnable on the local Linux box.
 
-Getestet mit Ubuntu 18.04.2, Debian 9.9, Debian 10.4
+This has been testet on Ubuntu 18.04.2, Debian 9.9, Debian 10.4
 
-## USBGET aufrufen
+## Using USBGET
 
-[Inhalt](#usbget)<br>
+[Index](#usbget)<br>
 
-USBGET verbindet sich mit der USBUNIT über den USB Bus. Dazu kann mit der Option -d das gewünschte USB device ausgewählt werden.
+USBGET connects to the USBUNIT via the USB bus. Use option -d to select the correct USB device.
 
-Vor dem Aufruf muss folgendes Verzeichnis erstellt werden:
+Before running USBGET the following directory has to be created.
 
 ```
 mkdir -p /tmp/mnt/data_persist/dev/bin
 ```
 
-Beispiel: usbget -d arduino_nano -i
+Example: usbget -d arduino_nano -i
 
-Wird UBSGET ohne -d Option aufgerufen wird das erste kompatible USB Device benutzt. 
+Running UBSGET without the -d option automatically selects the first compatible device.
 
-Bei einen Fehler wird eine log Datei in /tmp/mnt/data_persist/dev/bin erzeugt.
+In case of an error more information can be found in the log file created in /tmp/mnt/data_persist/dev/bin.
 
-### Hilfe anzeigen
+### Display help
 
-[Inhalt](#usbget)<br>
+[Index](#usbget)<br>
 
 Syntax: usbget -?
 
@@ -98,9 +97,9 @@ usbget 0.2.0
    In case no command is specified all supported actions are queried.
 ```
 
-### USB Devices anzeigen
+### List USB devices
 
-[Inhalt](#usbget)<br>
+[Index](#usbget)<br>
 
 Syntax: usbget [-d device] [-v] -u
 
@@ -114,11 +113,11 @@ VId=1d6b PId=0003 [- no access -]
 VId=1d6b PId=0002 [- no access -]  
 ```
 
-USB devices auf die nur root Zugriff hat sind mit "- no access -" markiert.
+To access some USB devices root permissions are required. Those devices are marked "- no access -".
 
-### Interne Informationen und Statistiken der USBUNIT anzeigen
+### Internal information and statistics
 
-[Inhalt](#usbget)<br>
+[Index](#usbget)<br>
 
 Syntax: usbget [-d device] [-v] -i
 
@@ -139,9 +138,9 @@ cksum fails = 84
 memory      = 176/341
 ```
 
-### Module der USBUNIT anzeigen 
+### List supported USBUNIT modules
 
-[Inhalt](#usbget)<br>
+[Index](#usbget)<br>
 
 Syntax: usbget [-d device] [-v] -l
 
@@ -153,9 +152,11 @@ OIL
 RGB
 ```
 
-### Moduldaten abfragen
+Details of supported modules can be found here: [MODULES](doc/module.md)
 
-[Inhalt](#usbget)<br>
+### Query module data
+
+[Index](#usbget)<br>
 
 Syntax: usbget [-d device] [-v] -q modul
 
@@ -165,18 +166,18 @@ $ cat /tmp/mnt/data_persist/dev/bin/tpms.out
 0: 19.0 2.19 1: 3.0 1.99 2: 20.0 2.01 3: 19.0 1.90
 ```
 
-Die Daten werden in einer Datei im Ordner /tmp/mnt/data_persist/dev/bin abgelegt.
+The queried data is stored in a file in the /tmp/mnt/data_persist/dev/bin folder.
 
-### Modulkonfiguration auslesen und einstellen.
+### Configure a USBUNIT module
 
-[Inhalt](#usbget)<br>
+[Index](#usbget)<br>
 
-Auslesen:<br>
+Query configuration:<br>
 Syntax: usbget [-d device] [-v] -c module
 
-Einstellen:<br>
+Set configuration:<br>
 Syntax: usbget [-d device] [-v] -s module -p "key=value" -p "key=value" ...<br>
-Syntax: usbget [-d device] [-v] -s module -p "key=value[;key=value...]"
+Alternative syntax: usbget [-d device] [-v] -s module -p "key=value[;key=value...]"
 
 ```
 $ usbget -c TPMS

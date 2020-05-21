@@ -7,9 +7,9 @@
 
 ## DISP
 
-[Inhalt](#modules)<br>
+[Index](#modules)<br>
 
-Display
+Configure the way the display shows data.
 
 ```
 $ usbget -c DISP
@@ -18,57 +18,61 @@ D=0 M=1 S=2 L=15
 $ usbget -s DISP -p "M=1;S=1"
 ```
 
-* D<br>
-  Device: OLED Display Chip
-  
+* D - Device: OLED display chip
+
+  Parameter: device number [0-1]
+
   0 = SH1106<br>
   1 = SDD1306
   
-* M<br>
-  Mode: Im mode 1 with zwischen Screen 0 und einem weiteren Screen umgeschaltet.
+* M - Mode: Select which screens are displayed.
+
+  Parameter: mode number [0-2]
   
-  0 = Nur einen Screen anzeigen<br>
-  1 = Wechsel zwischen 2 Screens<br>
-  2 = Wechsel zwischen allen Screens
+  0 = Display a single screen<br>
+  1 = Toggle between two screens<br>
+  2 = Switch all screens round robin
   
-* S<br>
-  Screen:
+* S - Screen: Set screen number for modes 0 and 1.
+
+  Parameter: screen number [0-4]
   
-  0 = Druck und Temperatur<br>
+  0 = Pressure and temperature<br>
   ![Screen 0](screen_0_s.jpg)<br>
   
-  1 = Temperatur und Druck<br>
+  1 = Temperature und pressure<br>
   ![Screen 1](screen_1_s.jpg)<br>
 
-  2 = Druck und Sensor ID<br>
+  2 = Pressure and Sensor ID<br>
   ![Screen 2](screen_2_s.jpg)<br>
 
-  3 = Statistiken 1<br>
+  3 = Statistics 1<br>
   ![Screen 3](screen_3_s.jpg)<br>
     
-  4 = Statistiken 2<br>
+  4 = Statistics 2<br>
   ![Screen 4](screen_4_s.jpg)
   
-* L<br>
-  Last update: Automatisches ausblenden der "Last update" Zeile.
- 
-  Sekunden: Die Zeile "Last update xx sec" wird nur angezeigt wenn die Zeit größer als der eingestellte Wert in Sekunden ist. 
+* L - Last update indicator: Automatically remove the "Last update" line.
+
+  Parameter: number of seconds [0-65535]
+  
+  The "Last update xx sec" line displayed only if the time since last update is larger than the configured value.
 
 ## OIL
 
-[Inhalt](#modules)<br>
+[Index](#modules)<br>
 
-Öldruck und Temperatur
+Oil pressure and temperature.
 
-Das Module hat keine einstellbaren Parameter.
+This modules has no configurable parameters.
 
 ## RGB
 
-[Inhalt](#modules)<br>
+[Index](#modules)<br>
 
 RGB LED
 
-Für das RGB Modul können die Farbwerte gesetzt werden.
+Set RGB color values in percent. [0-100]
 
 ```
 $ usbget -s RGB -p "R=100" -p "G=50" -p "B=50"
@@ -80,7 +84,7 @@ R=100 G=50 B=50
 
 ## TPMS
 
-[Inhalt](#modules)<br>
+[Index](#modules)<br>
 
 Tire Pressure Monitoring System
 
@@ -104,21 +108,27 @@ $ usbget -c TPMS
 11 ID=00000000 T=0.0 P=0.00 S=0
 ```
 
-ID=Sensor T=Temperatur P=Pressure S=Score
+ID=Sensor T=Temperature P=Pressure S=Score
 
-### Score wird wie folgt berechnet:
-Wird ein Datensatz für einen Sensor empfangen, erhält der Sensor einen Bonus
-von 10 Punkten. Alle 20 sek. wird jedem Sensor ein Punkt abgezogen.<br>
-Die Sensoren sind nach Punktestand sortiert.
+The score is used to identify your own sensors in case we temporary receive data from other cars sensors.<br>
+Whenever a data package for a sensor is received the sensor gets a boost of 10 points.
+Every 20 seconds the score decreases by one point.
 
-Im Arduino code sind 12 Slots für Sensoren reserviert.
+Sensors are sorted by score and the top 4 sensors are displayed.
 
-Mit usbget -s TPMS -p "0=xxxxxxxx" können die IDs für die ersten 4 Sensoren gesetzt werden. Diese Slots sind für diese
-Sensor IDs reserviert. Werden keine Sensoren gesetzt, oder ALLE sensor IDs geloscht z.Bsp mit
+If you know your sensor IDs you can use<br>
+```
+usbget -s TPMS -p "0=wwwwwwww;1=xxxxxxxx;2=yyyyyyyy;3=zzzzzzzz"
+```
+to reserve the first 4 slots for your sensors.<br>
+Obviously you need to replace the wwwwwwww .. zzzzzzzz with your sensor IDs.
+
+
+If no sensors have been set or all of the sensor IDs are cleared by 
 
 ```
 usbget -s TPMS -p "0=00000000;1=00000000;2=00000000;3=00000000"
 ```
 
-dann werden alle 12 slots gleich behandelt und nach Punktestand sortiert.
+the sorting algorithm is used.
 
