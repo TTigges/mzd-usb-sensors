@@ -171,16 +171,20 @@ void Tpms433::getData()
  */
 void Tpms433::sendData()
 {
-  // char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
+  char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
 
   /* FL: temp press FR: temp press RL: temp press RR: temp press */
 
   sendMoreDataStart();
   
   for( byte i = 0; i < TPMS_433_NUM_SENSORS; i++) {
+    id2hex( sensor[i].sensorId, hexstr );
+    hexstr[ 2 * TPMS_433_ID_LENGTH ] = '\0';
     
     Serial.print(i);
     Serial.print(F(": "));
+    Serial.print(hexstr);
+    Serial.print(F(" "));
     Serial.print(sensor[i].temp_c,1);
     Serial.print(F(" "));
     Serial.print(sensor[i].press_bar,2);
