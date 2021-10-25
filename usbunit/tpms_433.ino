@@ -174,6 +174,9 @@ void Tpms433::sendData()
   char hexstr[ 2 * TPMS_433_ID_LENGTH +1];
 
   /* FL: temp press FR: temp press RL: temp press RR: temp press */
+  /* UPDATE 2021.03.07 TTigges: */
+  /* FL: id temp press FR: id temp press RL: id temp press RR: id temp press */
+
 
   sendMoreDataStart();
   

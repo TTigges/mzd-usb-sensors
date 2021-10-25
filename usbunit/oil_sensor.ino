@@ -113,7 +113,7 @@ void OilSensor::setConfig()
 #endif
 
 float OilSensor::calcTemp(float tPinValue)
-{  
+{
   float T0 = 40 + OIL_ABSZERO;
   float T1 = 150 + OIL_ABSZERO;
   float R0 = 5830;
@@ -121,7 +121,7 @@ float OilSensor::calcTemp(float tPinValue)
   float RV = 1000;
   float VA_VB = tPinValue/OIL_MAXANALOGREAD;
   float B = (T0 * T1) / (T1-T0) * log(R0/R1);
-  float RN = RV*VA_VB / (1-VA_VB);
+  float RN = RV*(1-VA_VB)/VA_VB; /* CHANGED FOR SWITCHED DIRECTION, ALT.: RV*VA_VB / (1-VA_VB); */
 
   return T0 * B / (B + T0 * log(RN/R0)) -OIL_ABSZERO;
 }
@@ -134,7 +134,6 @@ float OilSensor::calcPress(float pPinValue)
   else if (pPinValue > OIL_PMAXVAL) {
     pPinValue = OIL_PMAXVAL;
   }
-  
   return pPinValue * OIL_MULTIPLIER - 1.25;
 }
 
