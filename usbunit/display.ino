@@ -32,7 +32,6 @@ static const byte y_pos[] = { 2,  2, 5,  5};
 
 SSD1306AsciiWire display;
 
-
 /*
  * This function is called once when the MC boots up.
  * It reads configuration data from EEPROM and returns the size of the data read.

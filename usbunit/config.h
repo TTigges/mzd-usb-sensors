@@ -110,8 +110,8 @@
 #ifdef OIL_SUPPORT
 
  /* Analog input pins (A/D converter) */
- #define OIL_T_PIN       A0
- #define OIL_P_PIN       A2
+ #define OIL_T_PIN       A2
+ #define OIL_P_PIN       A0
 
 #endif
 
