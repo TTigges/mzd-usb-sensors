@@ -71,7 +71,6 @@ For now, we suggest to install TPMS sensors (valve stem type), VDO Type TG1C or 
 
 In Europe and the rest of the world, 433 MHz sensors are used for active TPMS while in the USA, 315 MHz is used. For now, mzd-usb-sensors supports 433 MHz signals via the CC1101 receiver. Supporting 315 MHz sensors is something we might want to look into => **TBD**
 
-
 ## Thanks:
 
 Wolfix for coming up with the main protocol when he heard that I wanted the CMU to communicate with a usb connected microcontroller, for the support and all the updates and ideas! I can't thank you enough!
@@ -88,3 +87,5 @@ https://github.com/JSMSolns/TPMS_Toyota_UK_Decoder, https://www.hackster.io/jsms
 Trezdog44 (Trevelopment) and flyandi from mazda3revolution and mazdatweaks.com for stimulating the idea to build a custom app and providing examples and the CASDK.
 
 Herko ter Horst, the developer of the Speedometer-App for MZD which I used and updated to display the received signals.
+
+https://www.instagram.com/ringspider/
