@@ -150,12 +150,43 @@ updateTireTemp("Fl", res[12]);    // Warum Index 12? Niemand weiß es ohne Doku
 #define CMD_BROADCAST_STOP  'X'
 ```
 
-#### Broadcast-Timer Implementation
+#### Multi-Rate-System für optimale Performance
+**Problem:** Verschiedene Sensoren brauchen verschiedene Update-Raten
+- TPMS-Druck ändert sich über Stunden → 1Hz ausreichend
+- Öldruck bei Sportfahrten → 4Hz für Responsivität  
+- Ladedruck folgt Gaspedal → 8Hz für Echtzeit-Feeling
+
+#### Individual Sensor Timer Implementation
 ```c
-// usbunit.ino: Globaler Broadcast-State
+// usbunit.ino: Per-Sensor Timing statt global
+typedef struct {
+    unsigned long lastUpdate;
+    unsigned int intervalMs;
+    bool forceNext;  // Für sofortigen Update nach Config
+} sensor_timing_t;
+
+// Default-Intervalle für verschiedene Sensor-Kategorien
+sensor_timing_t tpms_timing = {0, 1000, false};    // 1Hz - träge
+sensor_timing_t oil_timing = {0, 250, false};      // 4Hz - responsive
+sensor_timing_t boost_timing = {0, 125, false};    // 8Hz - Echtzeit (geplant)
+
 bool broadcastEnabled = false;
-unsigned long lastBroadcast = 0;
-#define BROADCAST_INTERVAL_MS 250  // 4Hz
+unsigned long lastBroadcastCheck = 0;
+#define BROADCAST_CHECK_INTERVAL_MS 50  // Prüfe alle 50ms ob was zu senden ist
+
+bool shouldUpdate(sensor_timing_t* timing, unsigned long now) {
+    if (timing->forceNext) {
+        timing->forceNext = false;
+        timing->lastUpdate = now;
+        return true;
+    }
+    
+    if (now - timing->lastUpdate >= timing->intervalMs) {
+        timing->lastUpdate = now;
+        return true;
+    }
+    return false;
+}
 
 void loop() {
     if (Serial.available() > 0) {
@@ -164,20 +195,70 @@ void loop() {
     
     runTimeout();  // Bestehende Sensor-Updates
     
-    // Neuer Broadcast-Check
-    if (broadcastEnabled && (millis() - lastBroadcast >= BROADCAST_INTERVAL_MS)) {
+    // Broadcast-Check: Häufiger prüfen, aber nur senden wenn nötig
+    if (broadcastEnabled && (millis() - lastBroadcastCheck >= BROADCAST_CHECK_INTERVAL_MS)) {
         sendBroadcastData();
-        lastBroadcast = millis();
+        lastBroadcastCheck = millis();
     }
 }
 
 void sendBroadcastData() {
-    // Alle Module senden ihre Daten
-    for (int i = 0; i < numActions; i++) {
-        actions[i]->sendData();
+    unsigned long now = millis();
+    bool sentSomething = false;
+    
+    // Jeder Sensor prüft seinen eigenen Timer
+    if (shouldUpdate(&tpms_timing, now)) {
+        actions[TPMS_INDEX]->sendData();
+        sentSomething = true;
     }
-    sendEOT();
+    
+    if (shouldUpdate(&oil_timing, now)) {
+        actions[OIL_INDEX]->sendData();  
+        sentSomething = true;
+    }
+    
+    // Zukünftiger Ladedruck-Sensor
+    // if (shouldUpdate(&boost_timing, now)) {
+    //     actions[BOOST_INDEX]->sendData();
+    //     sentSomething = true;
+    // }
+    
+    // EOT nur senden wenn tatsächlich Daten kamen
+    if (sentSomething) {
+        sendEOT();
+    }
 }
+```
+
+#### Konfigurierbare Update-Raten
+```c
+// config.h: Timing-Parameter
+#define TPMS_DEFAULT_INTERVAL_MS    1000   // 1Hz - Reifendruck träge
+#define OIL_DEFAULT_INTERVAL_MS     250    // 4Hz - Balance Responsivität/Effizienz
+#define BOOST_DEFAULT_INTERVAL_MS   125    // 8Hz - Throttle-Response sichtbar
+#define ENV_DEFAULT_INTERVAL_MS     2000   // 0.5Hz - Umgebung sehr träge
+
+typedef struct timing_config_t {
+    uint16_t tpms_interval_ms;    
+    uint16_t oil_interval_ms;
+    uint16_t boost_interval_ms;
+    checksum_t checksum;
+} timing_config_t;
+
+// Via Stiming Command änderbar für Race/Eco-Modi
+```
+
+#### Bandbreiten-Effizienz
+```
+19200 baud = ~1920 bytes/sec praktisch
+
+Sensor      Rate    Bytes/Frame    Bytes/sec    % Budget
+TPMS        1Hz     120            120          6.25%
+Oil         4Hz     35             140          7.3% 
+Boost       8Hz     25             200          10.4%
+TOTAL                              460          24%
+
+→ 75% Reserve für Config, USB-Overhead, Erweiterungen
 ```
 
 #### Command-Handler erweitern
@@ -288,27 +369,73 @@ void handle_config_post(connection, json_body) {
 }
 ```
 
-#### JSON-Assembly Strategie
+#### JSON-Assembly mit Multi-Rate-Support
 ```c
-// Arduino sendet: "+4: A1B2C3D4 25.1 2.05 "
-// Wird zu: {"tpms":{"rr":{"id":"A1B2C3D4","t":25.1,"p":2.05}}}
+// Arduino sendet unterschiedliche Sensor-Daten je nach Timing
+// Manchmal nur: "+oiltemp: 85.2 oilpress: 3.45"
+// Manchmal nur: "+0: A1B2C3D4 25.1 2.05"  
+// usbget assembliert sparsames JSON
 
 typedef struct {
     char json_buffer[2048];
     int buffer_pos;
-    bool tpms_section;
-    bool oil_section;
+    bool tpms_in_frame;
+    bool oil_in_frame;
+    bool boost_in_frame;
 } json_builder_t;
 
 void parse_arduino_line_to_json(char* line) {
     if (starts_with(line, "+0:") || starts_with(line, "+1:") || 
         starts_with(line, "+2:") || starts_with(line, "+3:")) {
         // TPMS Sensor-Line → JSON
+        if (!json_builder.tpms_in_frame) {
+            append_to_json("\"tpms\":{");
+            json_builder.tpms_in_frame = true;
+        }
         parse_tpms_line(line);
     } else if (contains(line, "oiltemp:")) {
-        // Oil Sensor-Line → JSON  
+        // Oil Sensor-Line → JSON
+        if (!json_builder.oil_in_frame) {
+            append_to_json("\"oil\":{");
+            json_builder.oil_in_frame = true;
+        }
         parse_oil_line(line);
     }
+}
+
+// Resultierende JSON-Nachrichten sind variabel:
+// Nur Oil:  {"oil":{"t":85.2,"p":3.45}}  (~30 bytes)
+// Nur TPMS: {"tpms":{"fl":{"t":25.1,"p":2.05},...}}  (~120 bytes)  
+// Beides:   {"tpms":{...},"oil":{...}}  (~150 bytes)
+```
+
+#### Browser-Side Smart Merging
+```javascript
+var sensorState = {};  // Persistent state zwischen Updates
+
+eventSource.onmessage = function(event) {
+    var update = JSON.parse(event.data);
+    
+    // Merge nur geänderte Werte in globalen State
+    Object.assign(sensorState, update);
+    
+    // Selective Rendering - nur was sich geändert hat
+    if (update.tpms) renderTires(sensorState.tpms);      // 1Hz Updates
+    if (update.oil)  renderOil(sensorState.oil);         // 4Hz Updates  
+    if (update.boost) renderBoost(sensorState.boost);    // 8Hz Updates
+};
+
+// Racing-Mode: Temporär höhere Update-Raten
+function setRaceMode() {
+    fetch("/config", {
+        method: "POST",
+        body: JSON.stringify({
+            timing: {
+                oil: 100,    // 10Hz für Performance-Monitoring
+                boost: 62    // 16Hz für Throttle-Response
+            }
+        })
+    });
 }
 ```
 
